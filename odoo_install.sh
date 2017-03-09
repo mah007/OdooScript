@@ -124,7 +124,7 @@ if [ $IS_ENTERPRISE = "True" ]; then
     sudo git clone --depth 1 --branch master https://www.github.com/mah007/odoo "$OE_HOME/enterprise/addons"
 
     echo -e "\n---- Installing Enterprise specific libraries ----"
-    sudo apt-get install nodejs npm
+    sudo apt-get install nodejs npm -y
     sudo npm install -g less
     sudo npm install -g less-plugin-clean-css
 else 
