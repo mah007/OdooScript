@@ -114,7 +114,6 @@ fi
 
 
 
-
 echo "-----------------------------------------------------------"
 echo "Done! The Odoo developing platform is ready:"
 
