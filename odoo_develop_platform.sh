@@ -6,8 +6,7 @@
 # Email:      Mah008@me.com
 # Website:    http://www.mah007.com
 #-------------------------------------------------------------------------------
-# This script will install Odoo on your Ubuntu 14.04 server. It can install multiple Odoo instances
-# in one Ubuntu because of the different xmlrpc_ports
+# This script will make ur computer ready for developing on ODOO
 #-------------------------------------------------------------------------------
 # Make a new file:
 # sudo nano odoo_developing.sh
@@ -18,7 +17,7 @@
 ################################################################################
  
 ##fixed parameters
-#odoo insted of odoo use ur user name .EG OE_USER="mahmoud"
+#odoo instead of odoo use ur user name .EG OE_USER="mahmoud"
 OE_USER="odoo"
 #The default port where this Odoo instance will run under (provided you use the command -c in the terminal)
 #Set to true if you want to install it, false if you don't need it or have it already installed.
