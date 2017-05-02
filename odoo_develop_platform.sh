@@ -18,7 +18,7 @@
  
 ##fixed parameters
 #odoo instead of odoo use ur user name .EG OE_USER="mahmoud"
-OE_USER="odoo"
+OE_USER="mahmoud"
 #The default port where this Odoo instance will run under (provided you use the command -c in the terminal)
 #Set to true if you want to install it, false if you don't need it or have it already installed.
 INSTALL_WKHTMLTOPDF="True"
@@ -42,9 +42,9 @@ sudo apt-get update
 sudo apt-get upgrade -y
 sudo apt-get install default-jre
 sudo add-apt-repository ppa:webupd8team/java
-sudo apt-get install default-jdk
+sudo apt-get install default-jdk -y
 sudo apt-get update
-sudo apt-get install oracle-java8-installer
+sudo apt-get install oracle-java8-installer -y
 sudo add-apt-repository ppa:mystic-mirage/pycharm
 sudo apt-get update
 
