@@ -110,7 +110,7 @@ else
     echo -e "\n---- every thin is ready ----"
     
 fi	
-
+  sudo ln -s /usr/bin/nodejs /usr/bin/node
 
 
 echo "-----------------------------------------------------------"
