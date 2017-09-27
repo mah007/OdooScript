@@ -112,6 +112,8 @@ else
 fi	
   sudo ln -s /usr/bin/nodejs /usr/bin/node
 
+sudo easy_install greenlet
+sudo easy_install gevent
 
 echo "-----------------------------------------------------------"
 echo "Done! The Odoo developing platform is ready:"
