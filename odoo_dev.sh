@@ -111,9 +111,12 @@ else
     
 fi	
   sudo ln -s /usr/bin/nodejs /usr/bin/node
-
+  
+sudo apt-get install libsasl2-dev python-dev libldap2-dev libssl-dev
 sudo easy_install greenlet
 sudo easy_install gevent
+sudo pip install -r https://raw.githubusercontent.com/odoo/odoo/10.0/requirements.txt
+
 
 echo "-----------------------------------------------------------"
 echo "Done! The Odoo developing platform is ready:"
