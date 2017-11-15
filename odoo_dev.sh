@@ -115,6 +115,7 @@ fi
 sudo apt-get install libsasl2-dev python-dev libldap2-dev libssl-dev
 sudo easy_install greenlet
 sudo easy_install gevent
+sudo apt-get install -y libxml2-dev libxslt1-dev zlib1g-dev python3-pip
 sudo pip install -r https://raw.githubusercontent.com/odoo/odoo/10.0/requirements.txt
 
 
