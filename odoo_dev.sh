@@ -62,7 +62,7 @@ sudo su - postgres -c "createuser -s $OE_USER" 2> /dev/null || true
 # Install Dependencies
 #--------------------------------------------------
 echo -e "\n---- Install tool packages ----"
-sudo apt-get install wget subversion git bzr bzrtools python-pip gdebi-core -y
+sudo apt-get install wget subversion git bzr bzrtools python-pip python3-pip gdebi-core -y
 	
 echo -e "\n---- Install python packages ----"
 sudo apt-get install python-dateutil python-feedparser python-ldap python-libxslt1 python-lxml python-mako python-openid python-psycopg2 python-pybabel python-pychart python-pydot python-pyparsing python-reportlab python-simplejson python-tz python-vatnumber python-vobject python-webdav python-werkzeug python-xlwt python-yaml python-zsi python-docutils python-psutil python-mock python-unittest2 python-jinja2 python-pypdf python-decorator python-requests python-passlib python-pil python-gpgme python-launchpadlib build-essential python-all-dev python-setuptools python-wheel -y
@@ -117,6 +117,7 @@ sudo easy_install greenlet
 sudo easy_install gevent
 sudo apt-get install -y libxml2-dev libxslt1-dev zlib1g-dev python3-pip
 sudo pip install -r https://raw.githubusercontent.com/odoo/odoo/10.0/requirements.txt
+sudo pip3 install -r https://raw.githubusercontent.com/odoo/odoo/11.0/requirements.txt
 
 
 echo "-----------------------------------------------------------"
