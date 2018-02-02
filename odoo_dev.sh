@@ -48,7 +48,7 @@ sudo apt-get install oracle-java8-installer -y
 sudo add-apt-repository ppa:mystic-mirage/pycharm
 sudo apt-get update
 
-
+sudo apt-get install -y python3-asn1crypto python3-babel python3-bs4 python3-cffi-backend python3-cryptography python3-dateutil python3-docutils python3-feedparser python3-funcsigs python3-gevent python3-greenlet python3-html2text python3-html5lib python3-jinja2 python3-lxml python3-mako python3-markupsafe python3-mock python3-ofxparse python3-openssl python3-passlib python3-pbr python3-pil python3-psutil python3-psycopg2 python3-pydot python3-pygments python3-pyparsing python3-pypdf2 python3-renderpm python3-reportlab python3-reportlab-accel python3-roman python3-serial python3-stdnum python3-suds python3-tz python3-usb python3-vatnumber python3-werkzeug python3-xlsxwriter python3-yaml
 #--------------------------------------------------
 # Install PostgreSQL Server
 #--------------------------------------------------
