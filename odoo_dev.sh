@@ -23,7 +23,7 @@ OE_USER="odoo"
 #Set to true if you want to install it, false if you don't need it or have it already installed.
 INSTALL_WKHTMLTOPDF="True"
 
-# Set this to True if you want to install Odoo 9 Enterprise! ( you can use enterprise normaly too ;) )
+# Set this to True if you want to install Odoo 9 10 11 Enterprise! ( you can use enterprise normaly too ;) )
 IS_ENTERPRISE="True"
 
 ##
