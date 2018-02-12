@@ -106,7 +106,7 @@ if [ $IS_ENTERPRISE = "True" ]; then
     sudo npm install -g less
     sudo npm install -g less-plugin-clean-css
 else 
-    echo -e "\n---- every thin is ready ----"
+    echo -e "\n---- every thing is ready ----"
     
 fi	
   sudo ln -s /usr/bin/nodejs /usr/bin/node
