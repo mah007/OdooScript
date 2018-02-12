@@ -6,7 +6,7 @@
 # Email:      Mah008@me.com
 # Website:    http://www.mah007.com
 #-------------------------------------------------------------------------------
-# This script will make ur computer ready for developing on ODOO
+# This script will make ur computer ready for developing on ODOO from 8 to 11
 #-------------------------------------------------------------------------------
 # Make a new file:
 # sudo nano odoo_developing.sh
@@ -111,14 +111,14 @@ else
 fi	
   sudo ln -s /usr/bin/nodejs /usr/bin/node
   
-sudo apt-get install -y libsasl2-dev python-dev libldap2-dev libssl-dev
+sudo apt-get install -y libsasl2-dev python-dev libldap2-dev libssl-dev python3-dev
 sudo easy_install greenlet
 sudo easy_install gevent
 sudo apt-get install -y libxml2-dev libxslt1-dev zlib1g-dev python3-pip python3-wheel python3-setuptools
-sudo pip install -r https://raw.githubusercontent.com/odoo/odoo/10.0/requirements.txt
-sudo pip3 install -r https://raw.githubusercontent.com/odoo/odoo/11.0/requirements.txt
+sudo -H pip install -r https://raw.githubusercontent.com/odoo/odoo/10.0/requirements.txt
 sudo apt install -y python3-asn1crypto 
 sudo apt install -y python3-babel python3-bs4 python3-cffi-backend python3-cryptography python3-dateutil python3-docutils python3-feedparser python3-funcsigs python3-gevent python3-greenlet python3-html2text python3-html5lib python3-jinja2 python3-lxml python3-mako python3-markupsafe python3-mock python3-ofxparse python3-openssl python3-passlib python3-pbr python3-pil python3-psutil python3-psycopg2 python3-pydot python3-pygments python3-pyparsing python3-pypdf2 python3-renderpm python3-reportlab python3-reportlab-accel python3-roman python3-serial python3-stdnum python3-suds python3-tz python3-usb python3-vatnumber python3-werkzeug python3-xlsxwriter python3-yaml
+sudo -H pip3 install -r https://raw.githubusercontent.com/odoo/odoo/11.0/requirements.txt
 
 
 echo "-----------------------------------------------------------"
