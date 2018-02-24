@@ -1,4 +1,5 @@
 #!/bin/bash
+# to run the script "sudo /bin/sh odoo_dev.sh"
 ################################################################################
 # Script for preparing Odoo developing platform on Ubuntu 14.04, 15.04 and 16.04 (could be used for other version too)
 # Author:     Mahmoud Abdel Latif
