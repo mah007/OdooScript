@@ -41,7 +41,7 @@ WKHTMLTOX_X32=https://downloads.wkhtmltopdf.org/0.12/0.12.2.1/wkhtmltox-0.12.2.1
 echo -e "\n---- Update Server ----"
 sudo apt-get update
 sudo apt-get upgrade -y
-sudo apt-get install default-jre
+sudo apt-get install default-jre -y
 sudo add-apt-repository ppa:webupd8team/java
 sudo apt-get install default-jdk -y
 sudo apt-get update
