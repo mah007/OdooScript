@@ -13,6 +13,7 @@
 # sudo nano odoo_developing.sh
 # Place this content in it and then make the file executable:
 # sudo chmod +x odoo_developing.sh
+# git clone --depth 1 --branch 10.0 https://www.gitlab.com/mah007/odoo .
 # Execute the script to install Odoo:
 # ./odoo-developing
 ################################################################################
