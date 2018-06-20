@@ -10,4 +10,5 @@ after run the script u have to download odoo manully
 
 
 wget https://raw.githubusercontent.com/mah007/OdooScript/master/odoo_pro.sh
+
 sudo /bin/sh odoo_pro.sh
