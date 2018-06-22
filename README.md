@@ -9,9 +9,10 @@ after run the script u have to download odoo manully
 
 
 export LC_ALL="en_US.UTF-8"
-export LC_CTYPE="en_US.UTF-8"
-sudo dpkg-reconfigure locales
 
+export LC_CTYPE="en_US.UTF-8"
+
+sudo dpkg-reconfigure locales
 
 
 wget https://raw.githubusercontent.com/mah007/OdooScript/master/odoo_pro.sh
