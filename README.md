@@ -15,6 +15,15 @@ export LC_CTYPE="en_US.UTF-8"
 sudo dpkg-reconfigure locales
 
 
+sudo apt-get update
+sudo apt-get install software-properties-common
+sudo add-apt-repository ppa:certbot/certbot
+sudo apt-get update
+sudo apt-get install python-certbot-apache 
+
+
+
+
 wget https://raw.githubusercontent.com/mah007/OdooScript/master/odoo_pro.sh
 
 sudo /bin/sh odoo_pro.sh
