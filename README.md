@@ -15,11 +15,11 @@ export LC_CTYPE="en_US.UTF-8"
 sudo dpkg-reconfigure locales
 
 
-sudo apt-get update
-sudo apt-get install software-properties-common
-sudo add-apt-repository ppa:certbot/certbot
-sudo apt-get update
-sudo apt-get install python-certbot-apache 
+apt-get update
+apt-get install software-properties-common
+add-apt-repository ppa:certbot/certbot
+apt-get update
+apt-get install python-certbot-apache 
 
 
 
