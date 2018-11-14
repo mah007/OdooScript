@@ -28,9 +28,10 @@ apt-get install python-certbot-apache
 
 sudo certbot --apache
 
-nano  /etc/apt/sources.list.d/pgdg.list
 
 #######################################################################
+
+nano  /etc/apt/sources.list.d/pgdg.list
 
 deb http://apt.postgresql.org/pub/repos/apt/ xenial-pgdg main
 
