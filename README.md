@@ -41,6 +41,9 @@ sudo apt-get update
 
 ########################################################################
 
+sudo su - postgres -c "createuser -s odoo" 2> /dev/null || true
+
+
 wget https://raw.githubusercontent.com/mah007/OdooScript/master/odoo_pro.sh
 
 sudo /bin/sh odoo_pro.sh
