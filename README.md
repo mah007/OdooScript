@@ -37,6 +37,7 @@ deb http://apt.postgresql.org/pub/repos/apt/ xenial-pgdg main
 
 
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+
 sudo apt-get update
 
 ########################################################################
