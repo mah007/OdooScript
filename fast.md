@@ -19,3 +19,15 @@
  
  chown odoo11:odoo11 /etc/odoo/odoo11.conf
  
+ ---------------------------------------------
+ 
+touch /etc/odoo/odoo.conf
+ 
+touch /var/log/odoo/odoo-server.log
+ 
+ 
+chown odoo:odoo /var/log/odoo/odoo-server.log
+ 
+chown odoo:odoo /etc/odoo/odoo.conf
+ 
+ 
