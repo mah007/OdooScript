@@ -31,3 +31,11 @@ chown odoo:odoo /var/log/odoo/odoo-server.log
 chown odoo:odoo /etc/odoo/odoo.conf
  
  
+ sudo nano /etc/systemd/system/odoo.service
+ 
+ sudo systemctl daemon-reload
+ 
+ sudo systemctl enable odoo
+ 
+ sudo systemctl start odoo
+ 
