@@ -106,6 +106,7 @@ if [ $IS_ENTERPRISE = "True" ]; then
     sudo apt-get install nodejs npm -y
     sudo npm install -g less
     sudo npm install -g less-plugin-clean-css
+    sudo npm install -g rtlcss
 else 
     echo -e "\n---- every thing is ready ----"
     
