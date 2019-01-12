@@ -39,3 +39,13 @@ chown odoo:odoo /etc/odoo/odoo.conf
  
  sudo systemctl start odoo
  
+---------------------------------------------------
+
+RewriteCond %{HTTP_HOST} =www.mah007.com
+RewriteRule ^(.*) https://mah007.com/ [R]
+
+RewriteCond %{SERVER_NAME} =mah007.com [OR]
+RewriteCond %{SERVER_NAME} =webmail.mah007.com [OR]
+RewriteCond %{SERVER_NAME} =admin.mah007.com [OR]
+RewriteCond %{SERVER_NAME} =www.mah007.com
+RewriteRule ^ https://%{SERVER_NAME}%{REQUEST_URI} [END,NE,R=permanent]
