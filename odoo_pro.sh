@@ -69,6 +69,8 @@ echo -e "\n--- Install other required packages"
 sudo apt-get install node-clean-css -y
 sudo apt-get install node-less -y
 sudo apt-get install python-gevent -y
+apt-get install libwww-perl
+
 
 #--------------------------------------------------
 # Install Wkhtmltopdf if needed
