@@ -1,7 +1,7 @@
 #!/bin/bash
 sudo apt-get install nginx -y
 IPADR=`ifconfig eth0 2>/dev/null|awk '/inet addr:/ {print $2}'|sed 's/addr://'`
-nginx_file=/etc/nginx/sites-available/$IPADR
+nginx_file=/etc/nginx/sites-available/odoo.conf
 sudo su root -c "echo 'upstream odoo {
     server 0.0.0.0:8069 weight=1 fail_timeout=300s;
 }
