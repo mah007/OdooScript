@@ -55,6 +55,9 @@ echo '
     }
     location /longpolling {
     	 proxy_pass    http://odoo-im;
+	 proxy_set_header    Host            $host;
+         proxy_set_header    X-Real-IP       $remote_addr;
+         proxy_set_header    X-Forwarded-For $http_host;
     }
     # cache some static data in memory for 60mins.
     # under heavy load this should relieve stress on the web interface a bit.
