@@ -51,6 +51,11 @@ sudo /bin/sh odoo_pro.sh
 
 #
 
+wget http://software.virtualmin.com/gpl/scripts/install.sh
+
+sh /root/install.sh -b LEMP
+
+
 
 sudo su postgres
 
