@@ -26,11 +26,11 @@ wget https://raw.githubusercontent.com/mah007/OdooScript/12.0/nginx.sh <br />
 bash nginx.sh <br />
 
  apt-get update <br />
- apt-get install software-properties-common <br />
+ apt-get install software-properties-common -y <br />
  add-apt-repository universe <br />
  add-apt-repository ppa:certbot/certbot <br />
  apt-get update <br />
- apt-get install certbot python-certbot-nginx <br />
+ apt-get install certbot python-certbot-nginx -y<br />
 
 
 
