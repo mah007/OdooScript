@@ -28,6 +28,21 @@ apt-get install python-certbot-apache
 
 sudo certbot --apache
 
+#######################################################################
+wget https://raw.githubusercontent.com/mah007/OdooScript/12.0/nginx.sh
+
+bash nginx.sh
+
+
+
+ apt-get update <br />
+ apt-get install software-properties-common <br />
+ add-apt-repository universe <br />
+ add-apt-repository ppa:certbot/certbot <br />
+ apt-get update
+ apt-get install certbot python-certbot-nginx <br />
+
+
 
 #######################################################################
 
