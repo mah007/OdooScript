@@ -52,6 +52,9 @@ sudo /bin/sh odoo_pro.sh <br />
 
 wget http://software.virtualmin.com/gpl/scripts/install.sh <br />
 sh /root/install.sh -b LEMP <br />
+
+********************PG UTF*********************
+********************Code
 sudo su postgres <br />
 psql <br />
 update pg_database set datistemplate=false where datname='template1'; <br />
