@@ -12,7 +12,7 @@ upstream odoo-im {
 echo """server {
     # server port and name
     listen 80;
-    server_name    $IPADR;
+    server_name    0.0.0.0;
 """ >> $nginx_file
 echo '
     # Specifies the maximum accepted body size of a client request, 
