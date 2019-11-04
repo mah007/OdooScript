@@ -13,6 +13,9 @@ export LC_CTYPE="en_US.UTF-8" <br />
 sudo dpkg-reconfigure locales <br />
 
 ########################################################################<br />
+adduser odoo
+
+########################################################################<br />
 
 apt-get update <br />
 apt-get install software-properties-common <br />
