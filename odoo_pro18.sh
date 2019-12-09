@@ -46,7 +46,7 @@ sudo apt-get upgrade -y
 # Install PostgreSQL Server
 #--------------------------------------------------
 echo -e "\n---- Install PostgreSQL Server ----"
-sudo apt-get install postgresql postgresql-server-dev-* -y
+sudo apt-get install postgresql-12 postgresql-server-dev-12 -y
 
 echo -e "\n---- Creating the ODOO PostgreSQL User  ----"
 sudo su - postgres -c "createuser -s $OE_USER" 2> /dev/null || true
@@ -70,7 +70,7 @@ sudo apt-get install node-clean-css -y
 sudo apt-get install node-less -y
 sudo apt-get install python-gevent -y
 apt-get install libwww-perl -y
-sudo apt install ifupdown -y
+#sudo apt install ifupdown -y
 
 
 #--------------------------------------------------
