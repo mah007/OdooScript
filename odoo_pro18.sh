@@ -41,7 +41,7 @@ WKHTMLTOX_X32=https://downloads.wkhtmltopdf.org/0.12/0.12.5/wkhtmltox_0.12.5-1.b
 echo -e "\n---- Update Server ----"
 sudo apt-get update
 sudo apt-get upgrade -y
-apt install zip
+apt install -y zip
 echo "----------------------------localization-------------------------------"
 
 export LC_ALL="en_US.UTF-8"
