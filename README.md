@@ -40,7 +40,7 @@ bash nginx.sh <br />
 #######################################################################<br />
 
 nano  /etc/apt/sources.list.d/pgdg.list <br />
-deb http://apt.postgresql.org/pub/repos/apt/ xenial-pgdg main <br />
+deb deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main <br />
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add - <br />
 
 sudo apt-get update <br />
