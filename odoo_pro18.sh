@@ -128,6 +128,7 @@ sudo -H pip3 install -r https://raw.githubusercontent.com/odoo/odoo/12.0/require
 sudo -H pip3 install -r https://raw.githubusercontent.com/odoo/odoo/13.0/requirements.txt
 sudo -H pip3 install -r https://raw.githubusercontent.com/it-projects-llc/odoo-saas-tools/12.0/requirements.txt
 sudo -H pip3 install phonenumbers
+echo "---------------------------odoo directory--------------------------------"
 mkdir /odoo
 mkdir /etc/odoo
 mkdir /var/log/odoo
@@ -136,13 +137,19 @@ touch /var/log/odoo/odoo-server.log
 chown odoo:odoo /var/log/odoo/odoo-server.log
 chown odoo:odoo /etc/odoo/odoo.conf
 chown -R odoo:odoo /odoo
+echo "-------------------------------odoo service----------------------------"
 wget https://raw.githubusercontent.com/mah007/OdooScript/12.0/odoo.service
 cp odoo.service /etc/systemd/system
 sudo systemctl daemon-reload
 sudo systemctl enable odoo
 sudo systemctl start odoo
-
-
+echo "----------------------------NGINX-------------------------------"
+wget https://raw.githubusercontent.com/mah007/OdooScript/12.0/nginx.sh
+bash nginx.sh
+echo "---------------------------webmin--------------------------------"
+apt-get install -y perl libnet-ssleay-perl openssl libauthen-pam-perl libpam-runtime libio-pty-perl apt-show-versions python
+wget http://prdownloads.sourceforge.net/webadmin/webmin_1.930_all.deb
+sudo gdebi webmin_1.930_all.deb
 
 echo "-----------------------------------------------------------"
 echo "Done! The Odoo production platform is ready:"
