@@ -41,10 +41,17 @@ WKHTMLTOX_X32=https://downloads.wkhtmltopdf.org/0.12/0.12.5/wkhtmltox_0.12.5-1.b
 echo -e "\n---- Update Server ----"
 sudo apt-get update
 sudo apt-get upgrade -y
+apt install zip
+
 
 #--------------------------------------------------
 # Install PostgreSQL Server
 #--------------------------------------------------
+wget https://raw.githubusercontent.com/mah007/OdooScript/12.0/pgdg.list
+cp pgdg.list /etc/apt/sources.list.d
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+sudo apt-get update
+
 echo -e "\n---- Install PostgreSQL Server ----"
 sudo apt-get install postgresql-12 postgresql-server-dev-12 -y
 
@@ -121,6 +128,20 @@ sudo -H pip3 install -r https://raw.githubusercontent.com/odoo/odoo/12.0/require
 sudo -H pip3 install -r https://raw.githubusercontent.com/odoo/odoo/13.0/requirements.txt
 sudo -H pip3 install -r https://raw.githubusercontent.com/it-projects-llc/odoo-saas-tools/12.0/requirements.txt
 sudo -H pip3 install phonenumbers
+mkdir /odoo
+mkdir /etc/odoo
+mkdir /var/log/odoo
+touch /etc/odoo/odoo.conf
+touch /var/log/odoo/odoo-server.log
+chown odoo:odoo /var/log/odoo/odoo-server.log
+chown odoo:odoo /etc/odoo/odoo.conf
+chown -R odoo:odoo /odoo
+wget https://raw.githubusercontent.com/mah007/OdooScript/12.0/odoo.service
+cp odoo.service /etc/systemd/system
+sudo systemctl daemon-reload
+sudo systemctl enable odoo
+sudo systemctl start odoo
+
 
 
 echo "-----------------------------------------------------------"
