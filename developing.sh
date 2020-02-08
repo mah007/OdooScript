@@ -154,6 +154,7 @@ echo "---------------------------webmin--------------------------------"
 #apt-get install -y perl libnet-ssleay-perl openssl libauthen-pam-perl libpam-runtime libio-pty-perl apt-show-versions python
 #wget http://prdownloads.sourceforge.net/webadmin/webmin_1.930_all.deb
 #sudo gdebi webmin_1.930_all.deb
+sudo apt install snapd -y
 
 echo "-----------------------------------------------------------"
 echo "Done! The Odoo production platform is ready:"
