@@ -122,6 +122,24 @@ sudo -H pip3 install -r https://raw.githubusercontent.com/odoo/odoo/13.0/require
 
 sudo -H pip3 install phonenumbers
 
+echo "---------------------------odoo directory--------------------------------"
+mkdir /odoo
+mkdir /etc/odoo
+mkdir /var/log/odoo
+touch /etc/odoo/odoo.conf
+touch /var/log/odoo/odoo-server.log
+chown odoo:odoo /var/log/odoo/odoo-server.log
+chown odoo:odoo /etc/odoo/odoo.conf
+chown -R odoo:odoo /odoo
+echo "-------------------------------odoo service----------------------------"
+wget https://raw.githubusercontent.com/mah007/OdooScript/12.0/odoo.service
+cp odoo.service /etc/systemd/system
+sudo systemctl daemon-reload
+sudo systemctl enable odoo
+sudo systemctl start odoo
+echo "----------------------------NGINX-------------------------------"
+wget https://raw.githubusercontent.com/mah007/OdooScript/12.0/nginx.sh
+bash nginx.sh
 
 echo "-----------------------------------------------------------"
 echo "Done! The Odoo production platform is ready:"
