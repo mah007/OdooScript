@@ -41,12 +41,28 @@ WKHTMLTOX_X32=https://downloads.wkhtmltopdf.org/0.12/0.12.5/wkhtmltox_0.12.5-1.x
 echo -e "\n---- Update Server ----"
 sudo apt-get update
 sudo apt-get upgrade -y
+apt install -y zip
 
+echo "----------------------------localization-------------------------------"
+
+export LC_ALL="en_US.UTF-8"
+export LC_CTYPE="en_US.UTF-8"
+sudo dpkg-reconfigure locales
 #--------------------------------------------------
 # Install PostgreSQL Server
 #--------------------------------------------------
+
+
+# Create the file repository configuration:
+sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+
+# Import the repository signing key:
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+
+
+
 echo -e "\n---- Install PostgreSQL Server ----"
-sudo apt-get install postgresql postgresql-server-dev-* -y
+sudo apt-get install postgresql postgresql-server-dev-12 -y
 
 echo -e "\n---- Creating the ODOO PostgreSQL User  ----"
 sudo su - postgres -c "createuser -s $OE_USER" 2> /dev/null || true
@@ -140,6 +156,7 @@ sudo systemctl start odoo
 echo "----------------------------NGINX-------------------------------"
 wget https://raw.githubusercontent.com/mah007/OdooScript/12.0/nginx.sh
 bash nginx.sh
+apt-get install -y perl libnet-ssleay-perl openssl libauthen-pam-perl libpam-runtime libio-pty-perl apt-show-versions python
 
 echo "-----------------------------------------------------------"
 echo "Done! The Odoo production platform is ready:"
