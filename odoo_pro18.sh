@@ -21,6 +21,7 @@
 ##fixed parameters
 #instead of odoo use ur user name .EG OE_USER="mahmoud"
 OE_USER="odoo"
+OE_BRANCH="13.0"
 #The default port where this Odoo instance will run under (provided you use the command -c in the terminal)
 #Set to true if you want to install it, false if you don't need it or have it already installed.
 INSTALL_WKHTMLTOPDF="True"
@@ -140,7 +141,14 @@ touch /etc/odoo/odoo.conf
 touch /var/log/odoo/odoo-server.log
 chown odoo:odoo /var/log/odoo/odoo-server.log
 chown odoo:odoo /etc/odoo/odoo.conf
+cd /odoo
+
+sudo git clone --depth 1 --branch $OE_BRANCH https://www.github.com/odoo/odoo 
+cd /
+
 chown -R odoo:odoo /odoo
+
+cd /root
 echo "-------------------------------odoo service----------------------------"
 wget https://raw.githubusercontent.com/mah007/OdooScript/12.0/odoo.service
 cp odoo.service /etc/systemd/system
