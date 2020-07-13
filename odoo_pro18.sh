@@ -7,7 +7,7 @@
 # Email:      Mah008@me.com
 # Website:    http://www.mah007.com
 #-------------------------------------------------------------------------------
-# This script will make ur server ready for installing ODOO from 8 to 11
+# This script will make ur server ready for installing ODOO from 8 to 14
 #-------------------------------------------------------------------------------
 # Make a new file:
 # sudo nano odoo_pro.sh
