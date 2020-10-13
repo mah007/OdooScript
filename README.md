@@ -34,6 +34,8 @@ bash nginx.sh <br />
  add-apt-repository ppa:certbot/certbot <br />
  apt-get update <br />
  apt-get install certbot python-certbot-nginx -y<br />
+ 
+ sudo certbot --nginx <br />
 
 
 
