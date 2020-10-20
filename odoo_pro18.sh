@@ -21,12 +21,12 @@
 ##fixed parameters
 #instead of odoo use ur user name .EG OE_USER="mahmoud"
 OE_USER="odoo"
-OE_BRANCH="13.0"
+OE_BRANCH="14.0"
 #The default port where this Odoo instance will run under (provided you use the command -c in the terminal)
 #Set to true if you want to install it, false if you don't need it or have it already installed.
 INSTALL_WKHTMLTOPDF="True"
 
-# Set this to True if you want to install Odoo 9 10 11 Enterprise! ( you can use enterprise normaly too ;) )
+# Set this to True if you want to install Odoo 9 10 11 12 13 14Enterprise! ( you can use enterprise normaly too ;) )
 IS_ENTERPRISE="True"
 
 ##
@@ -58,7 +58,7 @@ wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-
 sudo apt-get update
 
 echo -e "\n---- Install PostgreSQL Server ----"
-sudo apt-get install postgresql-12 postgresql-server-dev-12 -y
+sudo apt-get install postgresql-13 postgresql-server-dev-13 -y
 
 echo -e "\n---- Creating the ODOO PostgreSQL User  ----"
 sudo su - postgres -c "createuser -s $OE_USER" 2> /dev/null || true
@@ -160,9 +160,9 @@ wget https://raw.githubusercontent.com/mah007/OdooScript/12.0/nginx.sh
 bash nginx.sh
 echo "---------------------------webmin--------------------------------"
 apt-get install -y perl libnet-ssleay-perl openssl libauthen-pam-perl libpam-runtime libio-pty-perl apt-show-versions python
-wget http://prdownloads.sourceforge.net/webadmin/webmin_1.954_all.deb
 
-sudo gdebi webmin_1.954_all.deb
+
+
 
 echo "-----------------------------------------------------------"
 echo "Done! The Odoo production platform is ready:"
