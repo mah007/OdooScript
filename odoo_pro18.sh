@@ -53,7 +53,9 @@ sudo dpkg-reconfigure locales
 # Install PostgreSQL Server
 #--------------------------------------------------
 wget https://raw.githubusercontent.com/mah007/OdooScript/12.0/pgdg.list
+wget https://raw.githubusercontent.com/mah007/OdooScript/14.0/webmin.list
 cp pgdg.list /etc/apt/sources.list.d
+cp webmin.list /etc/apt/sources.list.d
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
 sudo apt-get update
 
@@ -160,8 +162,11 @@ wget https://raw.githubusercontent.com/mah007/OdooScript/12.0/nginx.sh
 bash nginx.sh
 echo "---------------------------webmin--------------------------------"
 apt-get install -y perl libnet-ssleay-perl openssl libauthen-pam-perl libpam-runtime libio-pty-perl apt-show-versions python
-
-
+wget https://download.webmin.com/jcameron-key.asc
+apt-key add jcameron-key.asc
+apt-get install apt-transport-https -y
+apt-get update
+apt-get install webmin -y
 
 
 echo "-----------------------------------------------------------"
