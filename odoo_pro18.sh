@@ -160,9 +160,9 @@ wget https://raw.githubusercontent.com/mah007/OdooScript/12.0/nginx.sh
 bash nginx.sh
 echo "---------------------------webmin--------------------------------"
 apt-get install -y perl libnet-ssleay-perl openssl libauthen-pam-perl libpam-runtime libio-pty-perl apt-show-versions python
-wget http://prdownloads.sourceforge.net/webadmin/webmin_1.954_all.deb
+wget http://prdownloads.sourceforge.net/webadmin/webmin_1.962_all.deb
 
-sudo gdebi webmin_1.954_all.deb
+sudo gdebi webmin_1.962_all.deb
 
 echo "-----------------------------------------------------------"
 echo "Done! The Odoo production platform is ready:"
