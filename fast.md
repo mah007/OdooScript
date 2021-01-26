@@ -54,3 +54,4 @@ RewriteCond %{SERVER_NAME} =admin.mah007.com [OR]
 RewriteCond %{SERVER_NAME} =www.mah007.com
 
 RewriteRule ^ https://%{SERVER_NAME}%{REQUEST_URI} [END,NE,R=permanent]
+wget -O win10.iso https://software-download.microsoft.com/db/Win10_20H2_v2_English_x64.iso?t=197a055d-f846-4ecc-8d42-1e8478ec3999&e=1611790557&h=44b9ccd1a5b0316150a8294319e24ab5
