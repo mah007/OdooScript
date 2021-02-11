@@ -1,0 +1,64 @@
+sudo su
+apt install gparted filezilla grub2 wimtools -y
+=========================
+gparted
+=========================
+First some Disk Remove krni hai then saved krna hai.
+uske bad disk create krni hai or save krna hai.
+=========================
+gdisk /dev/sda
+r
+g
+p
+w
+Y
+========================
+mount /dev/sda1 /mnt
+cd ~
+mkdir disk
+mount /dev/sda2 disk
+grub-install --root-directory=/mnt /dev/sda
+cd /mnt/boot/grub 
+========================
+nano grub.cfg
+=======================
+menuentry "Windows Installer" {
+insmod ntfs
+search --set=root --file= /bootmgr
+ntldr /bootmgr
+boot
+}
+=======================
+cd /root/disk
+mkdir wincd
+======================
+ISO For Windows Server 2020 Use wget -O win10.iso https://bit.ly/WINDOWN-10-2020
+ISO For Windows Server 2019 use wget -O win10.iso https://bit.ly/LP2019WIN
+ISO For Windows Server 2016 Use wget -O win10.iso https://bit.ly/3eaXToH
+=====================
+mount -o loop win10.iso wincd
+rsync -avz --progress wincd/* /mnt
+umount wincd
+wget -O virtio.iso https://bit.ly/VIRTIO-RDP
+mount -o loop virtio.iso wincd
+
+rsync -avz --progress wincd/* /mnt/sources/virtio
+
+cd /mnt/sources
+touch cmd.txt
+echo 'add virtio /virtio_drivers' >> cmd.txt
+apt install florence
+florence
+========================================
+COMMANDS RUN THROUGH USER@DEBIAN
+========================================
+cd /mnt/sources 
+wimlib-imagex update boot.wim 2 < cmd.txt
+sudo su
+reboot
+==================================
+WINDOWS DRIVERS PATH
+=================================
+Boot/virtio_drivers/amd64/win10
+
+

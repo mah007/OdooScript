@@ -1,18 +1,18 @@
 #!/bin/bash
 sudo apt-get install nginx -y
 IPADR=`ifconfig eth0 2>/dev/null|awk '/inet addr:/ {print $2}'|sed 's/addr://'`
-nginx_file=/etc/nginx/sites-available/$IPADR
+nginx_file=/etc/nginx/sites-available/odoo.conf
 sudo su root -c "echo 'upstream odoo {
-    server 0.0.0.0:8069 weight=1 fail_timeout=300s;
+    server 127.0.0.1:8069 weight=1 fail_timeout=300s;
 }
 upstream odoo-im {
-    server 0.0.0.0:8072 weight=1 fail_timeout=300s;
+    server 127.0.0.1:8072 weight=1 fail_timeout=300s;
 }
 '" >> $nginx_file
 echo """server {
     # server port and name
     listen 80;
-    server_name    $IPADR;
+    server_name    0.0.0.0;
 """ >> $nginx_file
 echo '
     # Specifies the maximum accepted body size of a client request, 
@@ -55,6 +55,9 @@ echo '
     }
     location /longpolling {
     	 proxy_pass    http://odoo-im;
+	 proxy_set_header    Host            $host;
+         proxy_set_header    X-Real-IP       $remote_addr;
+         proxy_set_header    X-Forwarded-For $http_host;
     }
     # cache some static data in memory for 60mins.
     # under heavy load this should relieve stress on the web interface a bit.
