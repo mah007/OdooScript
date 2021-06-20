@@ -134,7 +134,7 @@ sudo -H pip3 install -r https://raw.githubusercontent.com/odoo/odoo/11.0/require
 sudo -H pip3 install -r https://raw.githubusercontent.com/odoo/odoo/12.0/requirements.txt
 sudo -H pip3 install -r https://raw.githubusercontent.com/odoo/odoo/13.0/requirements.txt
 sudo -H pip3 install -r https://raw.githubusercontent.com/odoo/odoo/14.0/requirements.txt
-sudo -H pip3 install -r https://raw.githubusercontent.com/it-projects-llc/odoo-saas-tools/12.0/requirements.txt
+sudo -H pip3 install -r https://raw.githubusercontent.com/mah007/OdooScript/14.0/requirements.txt
 sudo -H pip3 install phonenumbers
 echo "---------------------------odoo directory--------------------------------"
 mkdir /odoo
