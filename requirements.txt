@@ -1,0 +1,6 @@
+boto
+rotate_backups_s3
+pysftp
+oauthlib
+simplejson
+paramiko
