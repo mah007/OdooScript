@@ -52,9 +52,7 @@ sudo dpkg-reconfigure locales
 #--------------------------------------------------
 # Install PostgreSQL Server
 #--------------------------------------------------
-wget https://raw.githubusercontent.com/mah007/OdooScript/14.0/pgdg20.list
-wget https://raw.githubusercontent.com/mah007/OdooScript/14.0/webmin.list
-cp pgdg.list /etc/apt/sources.list.d
+sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt focal-pgdg main" > /etc/apt/sources.list.d/pgdg.list'wget https://raw.githubusercontent.com/mah007/OdooScript/14.0/webmin.list
 cp webmin.list /etc/apt/sources.list.d
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
 sudo apt-get update
