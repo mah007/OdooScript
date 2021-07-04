@@ -20,7 +20,7 @@
  
 ##fixed parameters
 #instead of odoo use ur user name .EG OE_USER="mahmoud"
-OE_USER="odoo"
+OE_USER="mahmoud"
 OE_BRANCH="14.0"
 #The default port where this Odoo instance will run under (provided you use the command -c in the terminal)
 #Set to true if you want to install it, false if you don't need it or have it already installed.
@@ -53,8 +53,6 @@ sudo dpkg-reconfigure locales
 # Install PostgreSQL Server
 #--------------------------------------------------
 sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt focal-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-wget https://raw.githubusercontent.com/mah007/OdooScript/14.0/webmin.list
-cp webmin.list /etc/apt/sources.list.d
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
 sudo apt-get update
 
