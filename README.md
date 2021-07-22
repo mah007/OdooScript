@@ -59,6 +59,13 @@ wget http://software.virtualmin.com/gpl/scripts/install.sh <br />
 sh /root/install.sh -b LEMP <br />
 
 ********************PG UTF*********************<br />
+$su postgres
+
+$psql
+
+*alter user odoo with password admin;
+
+
 
 sudo su postgres <br />
 psql <br />
