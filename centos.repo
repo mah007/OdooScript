@@ -1,0 +1,19 @@
+[baseos]
+name=CentOS Stream $releasever - BaseOS
+mirrorlist=http://mirrorlist.centos.org/?release=$stream&arch=$basearch&repo=BaseOS&infra=$infra
+baseurl=https://vault.centos.org/centos/8/BaseOS/x86_64/os/
+#baseurl=http://mirror.centos.org/$contentdir/$stream/BaseOS/$basearch/os/
+gpgcheck=0
+enabled=1
+#gpgkey=/etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgkey=https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL
+
+[appstream]
+name=CentOS Stream $releasever - AppStream
+mirrorlist=http://mirrorlist.centos.org/?release=$stream&arch=$basearch&repo=AppStream&infra=$infra
+#baseurl=http://mirror.centos.org/$contentdir/$stream/AppStream/$basearch/os/
+baseurl=https://vault.centos.org/centos/8/AppStream/x86_64/os/
+gpgcheck=0
+enabled=1
+#gpgkey=/etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+gpgkey=https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL
