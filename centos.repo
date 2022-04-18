@@ -17,3 +17,4 @@ gpgcheck=0
 enabled=1
 #gpgkey=/etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 gpgkey=https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL
+#/etc/yum.repos.d/centos.repo
