@@ -41,12 +41,28 @@ WKHTMLTOX_X32=https://downloads.wkhtmltopdf.org/0.12/0.12.5/wkhtmltox_0.12.5-1.x
 echo -e "\n---- Update Server ----"
 sudo apt-get update
 sudo apt-get upgrade -y
+apt install -y zip
 
+echo "----------------------------localization-------------------------------"
+
+export LC_ALL="en_US.UTF-8"
+export LC_CTYPE="en_US.UTF-8"
+sudo dpkg-reconfigure locales
 #--------------------------------------------------
 # Install PostgreSQL Server
 #--------------------------------------------------
+
+
+# Create the file repository configuration:
+sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+
+# Import the repository signing key:
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+
+
+
 echo -e "\n---- Install PostgreSQL Server ----"
-sudo apt-get install postgresql postgresql-server-dev-* -y
+sudo apt-get install postgresql postgresql-server-dev-12 -y
 
 echo -e "\n---- Creating the ODOO PostgreSQL User  ----"
 sudo su - postgres -c "createuser -s $OE_USER" 2> /dev/null || true
@@ -69,6 +85,8 @@ echo -e "\n--- Install other required packages"
 sudo apt-get install node-clean-css -y
 sudo apt-get install node-less -y
 sudo apt-get install python-gevent -y
+apt-get install libwww-perl
+
 
 #--------------------------------------------------
 # Install Wkhtmltopdf if needed
@@ -99,6 +117,7 @@ if [ $IS_ENTERPRISE = "True" ]; then
     sudo apt-get install nodejs npm -y
     sudo npm install -g less
     sudo npm install -g less-plugin-clean-css
+    sudo npm install -g rtlcss
 else 
     echo -e "\n---- every thing is ready ----"
     
@@ -113,8 +132,31 @@ sudo -H pip install -r https://raw.githubusercontent.com/odoo/odoo/10.0/requirem
 sudo apt install -y python3-asn1crypto 
 sudo apt install -y python3-babel python3-bs4 python3-cffi-backend python3-cryptography python3-dateutil python3-docutils python3-feedparser python3-funcsigs python3-gevent python3-greenlet python3-html2text python3-html5lib python3-jinja2 python3-lxml python3-mako python3-markupsafe python3-mock python3-ofxparse python3-openssl python3-passlib python3-pbr python3-pil python3-psutil python3-psycopg2 python3-pydot python3-pygments python3-pyparsing python3-pypdf2 python3-renderpm python3-reportlab python3-reportlab-accel python3-roman python3-serial python3-stdnum python3-suds python3-tz python3-usb python3-vatnumber python3-werkzeug python3-xlsxwriter python3-yaml
 sudo -H pip3 install -r https://raw.githubusercontent.com/odoo/odoo/11.0/requirements.txt
+sudo -H pip3 install -r https://raw.githubusercontent.com/odoo/odoo/12.0/requirements.txt
+sudo -H pip3 install -r https://raw.githubusercontent.com/odoo/odoo/13.0/requirements.txt
+
+
 sudo -H pip3 install phonenumbers
 
+echo "---------------------------odoo directory--------------------------------"
+mkdir /odoo
+mkdir /etc/odoo
+mkdir /var/log/odoo
+touch /etc/odoo/odoo.conf
+touch /var/log/odoo/odoo-server.log
+chown odoo:odoo /var/log/odoo/odoo-server.log
+chown odoo:odoo /etc/odoo/odoo.conf
+chown -R odoo:odoo /odoo
+echo "-------------------------------odoo service----------------------------"
+wget https://raw.githubusercontent.com/mah007/OdooScript/12.0/odoo.service
+cp odoo.service /etc/systemd/system
+sudo systemctl daemon-reload
+sudo systemctl enable odoo
+sudo systemctl start odoo
+echo "----------------------------NGINX-------------------------------"
+wget https://raw.githubusercontent.com/mah007/OdooScript/12.0/nginx.sh
+bash nginx.sh
+apt-get install -y perl libnet-ssleay-perl openssl libauthen-pam-perl libpam-runtime libio-pty-perl apt-show-versions python
 
 echo "-----------------------------------------------------------"
 echo "Done! The Odoo production platform is ready:"
