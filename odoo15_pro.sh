@@ -42,7 +42,7 @@ WKHTMLTOX_X32=https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-
 echo -e "\n---- Update Server ----"
 sudo apt-get update
 sudo apt-get upgrade -y
-apt install -y zip gdebi
+apt install -y zip gdebi net-tools
 echo "----------------------------localization-------------------------------"
 
 export LC_ALL="en_US.UTF-8"
