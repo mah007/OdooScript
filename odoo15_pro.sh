@@ -22,6 +22,13 @@
 #instead of odoo use ur user name .EG OE_USER="mahmoud"
 OE_USER="odoo"
 OE_BRANCH="15.0"
+
+# Add group
+groupadd $OE_USER
+# Add user
+useradd --create-home -d /home/$OE_USER --shell /bin/bash -g $OE_USER $OE_USER
+# add user to sudoers
+usermod -aG sudo $OE_USER
 #The default port where this Odoo instance will run under (provided you use the command -c in the terminal)
 #Set to true if you want to install it, false if you don't need it or have it already installed.
 INSTALL_WKHTMLTOPDF="True"
