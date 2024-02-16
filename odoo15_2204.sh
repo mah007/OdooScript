@@ -107,8 +107,7 @@ if [ $INSTALL_WKHTMLTOPDF = "True" ]; then
   fi
   sudo wget $_url
   sudo gdebi --n `basename $_url`
-  sudo ln -s /usr/local/bin/wkhtmltopdf /usr/bin
-  sudo ln -s /usr/local/bin/wkhtmltoimage /usr/bin
+
 else
   echo "Wkhtmltopdf isn't installed due to the choice of the user!"
 fi
