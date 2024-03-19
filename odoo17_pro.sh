@@ -143,7 +143,7 @@ chown odoo:odoo /var/log/odoo/odoo-server.log
 chown odoo:odoo /etc/odoo/odoo.conf
 cd /odoo
 
-sudo git clone --depth 1 --branch "$OE_BRANCH" https://www.github.com/odoo/odoo .
+sudo git clone --depth 1 --branch "$OE_BRANCH" https://www.github.com/odoo/odoo 
 cd /
 
 chown -R odoo:odoo /odoo
