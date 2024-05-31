@@ -89,7 +89,7 @@ echo -e "\n--- Install other required packages"
 sudo apt-get install node-clean-css -y
 sudo apt-get install node-less -y
 sudo apt-get install python-gevent -y
-sudo apt-get install libcairo2-dev python3-cairo
+sudo apt-get install libcairo2-dev python3-cairo -y
 pip3 install rlPyCairo
 apt-get install libwww-perl -y
 
