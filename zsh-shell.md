@@ -47,7 +47,7 @@ This will ask you to setup Zsh as default set. You can access or reject this as 
 You may like to change Zsh theme by editiog ~/.zshrc file on your system. You can select a theme from  [here](https://github.com/ohmyzsh/ohmyzsh/wiki/Themes).
 
 ```
-sudo vi ~/.zshrc 
+sudo nano ~/.zshrc 
 ```
 
 Set theme name to ZSH_THEME environment variable.
