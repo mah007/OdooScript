@@ -1,5 +1,5 @@
 # OdooScript
-Odoo dependence installation script for Ubuntu 14.04 , 15.04 ,16.04 (universal)  
+Odoo dependence installation script for Ubuntu 14.04 , 15.04 ,16.04 ,20.04 , 22.04 ,*24.04(universal)  
 make your envirument ready for all kind of odoo with pycharm IDE
 after run the script u have to download odoo manully 
 
@@ -7,6 +7,9 @@ ssh-keygen -t ed25519 -C "your_email@example.com"
 
 ### Copy this script and run it on your terminal 
 
+./odoo-bin -w a -s -c  ../odoo.conf --stop-after-init
+
+./odoo-bin -w a -s -c  /etc/odoo/odoo.conf --stop-after-init
 
 export LC_ALL="en_US.UTF-8" <br />
 export LC_CTYPE="en_US.UTF-8" <br />
