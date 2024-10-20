@@ -42,7 +42,7 @@ sudo update-alternatives --config pip
 
 # Install Python libraries via pip for Python 3.11
 sudo python3.11 -m pip install --upgrade pip
-sudo python3.11 -m pip install Babel beautifulsoup4 cffi cryptography dateutil docutils feedparser funcsigs gevent greenlet html2text html5lib jinja2 lxml mako MarkupSafe mock ofxparse pyopenssl passlib pbr pillow psutil psycopg2-binary pydot pygments pyparsing PyPDF2 renderpm reportlab roman serial stdnum suds-jurko pytz pyusb Werkzeug xlsxwriter pyyaml
+sudo python3.11 -m pip install Babel beautifulsoup4 phonenumbers cryptography html2text html5lib jinja2 lxml MarkupSafe pyopenssl psycopg2-binary
 
 # Install PostgreSQL from official repository
 sudo yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm
