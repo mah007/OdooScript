@@ -26,50 +26,57 @@ read odoo_version
 hostname=$(hostname)
 
 # Enable Code Ready Repository and Development Tools
-sudo subscription-manager repos --enable codeready-builder-for-rhel-9-x86_64-rpms
-sudo yum groupinstall -y "Development Tools"
-sudo yum install -y git gcc redhat-rpm-config libxslt-devel bzip2-devel openldap-devel libjpeg-devel freetype-devel curl unzip openssl-devel wget yum-utils make libffi-devel zlib-devel tar libpq-devel python3.11 python3.11-devel python3.11-pip
+sudo subscription-manager repos --enable codeready-builder-for-rhel-9-x86_64-rpms 2>/dev/null || true
+sudo yum groupinstall -y "Development Tools" 2>/dev/null || true
+sudo yum install -y git gcc redhat-rpm-config libxslt-devel bzip2-devel openldap-devel libjpeg-devel freetype-devel curl unzip openssl-devel wget yum-utils make libffi-devel zlib-devel tar libpq-devel python3.11 python3.11-devel python3.11-pip 2>/dev/null || true
 
 # Set Python 3.11 as the default python3 alternative
-sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
-sudo update-alternatives --config python
+sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1 2>/dev/null || true
+sudo update-alternatives --config python 2>/dev/null || true
 
 # Set pip3.11 as the default pip3 and pip alternative
-sudo update-alternatives --install /usr/bin/pip pip /usr/bin/pip3.11 1
-sudo update-alternatives --config pip
+sudo update-alternatives --install /usr/bin/pip pip /usr/bin/pip3.11 1 2>/dev/null || true
+sudo update-alternatives --config pip 2>/dev/null || true
 
 # Install PostgreSQL from official repository
-sudo yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm
-sudo yum install -y postgresql16-server postgresql16 postgresql16-devel
-sudo /usr/pgsql-16/bin/postgresql-16-setup initdb
-sudo systemctl enable --now postgresql-16
+sudo yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm 2>/dev/null || true
+sudo yum install -y postgresql16-server postgresql16 postgresql16-devel 2>/dev/null || true
+
+# Check if the data directory is empty before initializing PostgreSQL
+if [ ! "$(ls -A /var/lib/pgsql/16/data/)" ]; then
+  sudo /usr/pgsql-16/bin/postgresql-16-setup initdb
+else
+  echo "Data directory is not empty, skipping initdb."
+fi
+
+sudo systemctl enable --now postgresql-16 2>/dev/null || true
 
 # Create a PostgreSQL user for Odoo
-su - postgres -c "createuser -s odoo"
+su - postgres -c "createuser -s odoo" 2>/dev/null || true
 
 # Install wkhtmltox
-sudo yum install -y https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox-0.12.6.1-2.almalinux9.x86_64.rpm
+sudo yum install -y https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox-0.12.6.1-2.almalinux9.x86_64.rpm 2>/dev/null || true
 
 # Install Node.js
-sudo yum module install -y nodejs:18
+sudo yum module install -y nodejs:18 2>/dev/null || true
 
 # Create Odoo user and directories
-sudo useradd -m -U -r -d /home/odoo -s /bin/bash odoo
-sudo mkdir /odoo /odoo/extra
+sudo useradd -m -U -r -d /home/odoo -s /bin/bash odoo 2>/dev/null || true
+sudo mkdir -p /odoo /odoo/extra 2>/dev/null || true
 sudo chown -R odoo:odoo /odoo
 
 # Clone Odoo from GitHub
-sudo -u odoo git clone --depth 1 --branch $odoo_version https://www.github.com/odoo/odoo.git /odoo/odoo
+sudo -u odoo git clone --depth 1 --branch $odoo_version https://www.github.com/odoo/odoo.git /odoo/odoo 2>/dev/null || true
 
 # Set the PostgreSQL binary path for the Odoo user
-sudo -u odoo bash -c "echo 'export PATH=/usr/pgsql-16/bin:\$PATH' >> /home/odoo/.bashrc"
+sudo -u odoo bash -c "echo 'export PATH=/usr/pgsql-16/bin:\$PATH' >> /home/odoo/.bashrc" 2>/dev/null || true
 sudo -u odoo bash -c "source /home/odoo/.bashrc"
 
 # Install Python requirements for Odoo under the Odoo user
-sudo -u odoo -H bash -c "pip install -r https://raw.githubusercontent.com/odoo/odoo/$odoo_version/requirements.txt --user"
+sudo -u odoo -H bash -c "pip install -r https://raw.githubusercontent.com/odoo/odoo/$odoo_version/requirements.txt --user" 2>/dev/null || true
 
 # Create Odoo configuration directory and log file
-sudo mkdir -p /etc/odoo /var/log/odoo
+sudo mkdir -p /etc/odoo /var/log/odoo 2>/dev/null || true
 sudo touch /etc/odoo/odoo.conf /var/log/odoo/odoo-server.log
 sudo chown -R odoo:odoo /etc/odoo /var/log/odoo
 
@@ -105,17 +112,17 @@ EOF
 
 # Reload systemd and enable Odoo service
 sudo systemctl daemon-reload
-sudo systemctl enable --now odoo
+sudo systemctl enable --now odoo 2>/dev/null || true
 
 # Install the latest version of Nginx from official repository
-sudo yum install -y nginx
-sudo systemctl enable --now nginx
+sudo yum install -y nginx 2>/dev/null || true
+sudo systemctl enable --now nginx 2>/dev/null || true
 
 # Generate a self-signed SSL certificate
-sudo mkdir -p /etc/ssl/nginx
+sudo mkdir -p /etc/ssl/nginx 2>/dev/null || true
 sudo openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 \
   -subj "/C=US/ST=State/L=City/O=Company Name/OU=Org/CN=$hostname" \
-  -keyout /etc/ssl/nginx/server.key -out /etc/ssl/nginx/server.crt
+  -keyout /etc/ssl/nginx/server.key -out /etc/ssl/nginx/server.crt 2>/dev/null || true
 
 # Set permissions for the certificate files
 sudo chmod 600 /etc/ssl/nginx/server.key /etc/ssl/nginx/server.crt
