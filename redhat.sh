@@ -1,157 +1,109 @@
 #!/bin/bash
+set -e  # Exit on any error
 
-# Function to display colorful billboard message
-display_billboard() {
-    printf "\e[91m\e[1m==================================================\e[0m\n"
-    printf "\e[93m\e[1m%s\e[0m\n" "$1"
-    printf "\e[91m\e[1m==================================================\e[0m\n"
+# Function to display colorful intro
+function intro() {
+    clear
+    echo -e "\e[1;32m#############################################\e[0m"  # Green
+    echo -e "\e[1;31m#                                           #\e[0m"  # Red
+    echo -e "\e[1;34m#  WELCOME TO ODOO INSTALLING SCRIPT FOR    #\e[0m"  # Blue
+    echo -e "\e[1;34m#           REDHAT 9 & ALMALINUX 9          #\e[0m"  # Blue
+    echo -e "\e[1;31m#                                           #\e[0m"  # Red
+    echo -e "\e[1;32m#############################################\e[0m"  # Green
+    echo ""
+    echo -e "\e[1;33mStarting the installation...\e[0m"  # Yellow
+    sleep 3  # Pause for 3 seconds
 }
 
-# Function to prompt user for Odoo version
-select_odoo_version() {
-    echo "Please select the Odoo version:"
-    echo "1) Odoo 14.0"
-    echo "2) Odoo 15.0"
-    echo "3) Odoo 16.0"
-    echo "4) Odoo 17.0"
-    read -rp "Enter your choice (1-4): " choice
+# Call the intro function
+intro
 
-    case $choice in
-        1) OE_BRANCH="14.0";;
-        2) OE_BRANCH="15.0";;
-        3) OE_BRANCH="16.0";;
-        4) OE_BRANCH="17.0";;
-        *) echo "Invalid choice. Please enter a number between 1 and 4."; exit 1;;
-    esac
-}
+# Ask for Odoo version before doing anything
+echo "Choose Odoo version (14.0, 15.0, 16.0, 17.0, 18.0):"
+read odoo_version
 
-# Display billboard message
-billboard_message="Welcome to the Odoo Production Server Setup Script for Red Hat 9!"
-display_billboard "$billboard_message"
+# Get the hostname of the machine
+hostname=$(hostname)
 
-# Prompt user for Odoo version
-select_odoo_version
+# Enable Code Ready Repository and Development Tools
+sudo subscription-manager repos --enable codeready-builder-for-rhel-9-x86_64-rpms
+sudo yum groupinstall -y "Development Tools"
+sudo yum install -y git gcc redhat-rpm-config libxslt-devel bzip2-devel openldap-devel libjpeg-devel freetype-devel curl unzip openssl-devel wget yum-utils make libffi-devel zlib-devel tar libpq-devel
 
-# Fixed parameters
-OE_USER="odoo"
+# Enable Python 3.11 and install necessary packages
+sudo yum install -y python3.11 python3.11-pip python3.11-devel
+sudo yum install -y python3.11-babel python3.11-bs4 python3.11-cffi-backend python3.11-cryptography python3.11-dateutil python3.11-docutils python3.11-feedparser python3.11-funcsigs python3.11-gevent python3.11-greenlet python3.11-html2text python3.11-html5lib python3.11-jinja2 python3.11-lxml python3.11-mako python3.11-markupsafe python3.11-mock python3.11-ofxparse python3.11-openssl python3.11-passlib python3.11-pbr python3.11-pillow python3.11-psutil python3.11-psycopg2 python3.11-pydot python3.11-pygments python3.11-pyparsing python3.11-pypdf2 python3.11-renderpm python3.11-reportlab python3.11-reportlab-accel python3.11-roman python3.11-serial python3.11-stdnum python3.11-suds python3.11-tz python3.11-usb python3.11-werkzeug python3.11-xlsxwriter python3.11-yaml
 
-# Add user group
-groupadd "$OE_USER"
-# Add user
-useradd --create-home -d /home/"$OE_USER" --shell /bin/bash -g "$OE_USER" "$OE_USER"
-# Add user to sudoers
-usermod -aG wheel "$OE_USER"
+# Install PostgreSQL from official repository
+sudo yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+sudo yum install -y postgresql16-server postgresql16 postgresql16-devel
+sudo /usr/pgsql-16/bin/postgresql-16-setup initdb
+sudo systemctl enable --now postgresql-16
 
-# The default port where this Odoo instance will run under
-INSTALL_WKHTMLTOPDF="True"
+# Create a PostgreSQL user for Odoo
+su - postgres -c "createuser -s $odoo_version"
 
-# Set to True if you want to install Odoo Enterprise
-IS_ENTERPRISE="True"
-
-# WKHTMLTOPDF download links
-WKHTMLTOX_X64="https://github.com/odoo/wkhtmltopdf/releases/download/nightly/odoo-wkhtmltopdf-fedora-39-x86_64-0.13.0-nightly.rpm"
-
-# Update Server
-echo -e "\n---- Update Server ----"
-sudo dnf update -y
-sudo dnf install -y epel-release zip net-tools
-
-# Install PostgreSQL
-echo -e "\n---- Install PostgreSQL Server ----"
-sudo dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm
-sudo dnf install -y postgresql15 postgresql15-server postgresql15-contrib postgresql15-devel
-
-# Initialize PostgreSQL
-sudo /usr/pgsql-15/bin/postgresql-15-setup initdb
-sudo systemctl enable postgresql-15
-sudo systemctl start postgresql-15
-
-# Create PostgreSQL User for Odoo
-sudo su - postgres -c "createuser -s $OE_USER" 2> /dev/null || true
-
-# Install dependencies
-echo -e "\n---- Install tool packages ----"
-sudo dnf install -y git python3-pip gcc wget python3-devel libxslt-devel bzip2-devel openldap-devel libjpeg-devel zlib-devel libpq-devel openjpeg2-devel \
-libtiff-devel libwebp-devel freetype-devel harfbuzz-devel fribidi-devel cairo-devel
-sudo dnf groupinstall "Development Tools" -y
-
-# Install python libraries
-echo -e "\n---- Install Python libraries ----"
-pip3 install --upgrade setuptools wheel
-pip3 install psycopg2-binary pillow babel lxml decorator passlib werkzeug html2text xlwt openpyxl requests phonenumbers
+# Install wkhtmltox
+sudo yum install -y https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox-0.12.6.1-2.almalinux9.x86_64.rpm
 
 # Install Node.js
-echo -e "\n---- Install Node.js ----"
-sudo dnf module install -y nodejs:20
-sudo npm install -g less less-plugin-clean-css rtlcss
+sudo yum module install -y nodejs:18
 
-# Install Wkhtmltopdf if needed
-if [ "$INSTALL_WKHTMLTOPDF" = "True" ]; then
-    echo -e "\n---- Install wkhtmltopdf ----"
-    wget $WKHTMLTOX_X64
-    sudo dnf install -y `basename $WKHTMLTOX_X64`
-else
-    echo "Wkhtmltopdf isn't installed due to user choice."
-fi
+# Create Odoo user and directories
+sudo useradd -m -U -r -d /home/odoo -s /bin/bash odoo
+sudo mkdir /odoo /odoo/extra
+sudo chown -R odoo:odoo /odoo
 
-# Install Odoo from GitHub
-echo -e "\n---- Installing Odoo from GitHub ----"
-mkdir /odoo
-mkdir /etc/odoo
-mkdir /var/log/odoo
-touch /etc/odoo/odoo.conf
-touch /var/log/odoo/odoo-server.log
-chown odoo:odoo /var/log/odoo/odoo-server.log
-chown odoo:odoo /etc/odoo/odoo.conf
-cd /odoo
+# Clone Odoo from GitHub
+sudo -u odoo git clone --depth 1 --branch $odoo_version https://www.github.com/odoo/odoo.git /odoo/odoo
 
-sudo git clone --depth 1 --branch "$OE_BRANCH" https://www.github.com/odoo/odoo 
-chown -R odoo:odoo /odoo
+# Create Odoo configuration directory and log file
+sudo mkdir -p /etc/odoo /var/log/odoo
+sudo touch /etc/odoo/odoo.conf /var/log/odoo/odoo-server.log
+sudo chown -R odoo:odoo /etc/odoo /var/log/odoo
 
-# Create Odoo systemd service
-echo -e "\n---- Create Odoo Service ----"
+# Create Odoo configuration file
+cat <<EOF | sudo tee /etc/odoo/odoo.conf
+[options]
+   ; admin password
+   admin_passwd = admin
+   db_host = False
+   db_port = False
+   db_user = odoo
+   db_password = False
+   addons_path = /odoo/odoo/addons,/odoo/extra
+   logfile = /var/log/odoo/odoo-server.log
+EOF
+
+# Set up Odoo as a systemd service
 cat <<EOF | sudo tee /etc/systemd/system/odoo.service
 [Unit]
-Description=Odoo ERP
-Documentation=https://www.odoo.com
-After=network.target postgresql-15.service
+Description=Odoo
+Documentation=http://www.odoo.com
+After=network.target postgresql-16.service
 
 [Service]
-Type=simple
-User=$OE_USER
-ExecStart=/odoo/odoo/odoo-bin -c /etc/odoo/odoo.conf
-KillMode=mixed
+User=odoo
+Group=odoo
+ExecStart=/usr/bin/python3.11 /odoo/odoo/odoo-bin -c /etc/odoo/odoo.conf
+StandardOutput=journal+console
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
+# Reload systemd and enable Odoo service
 sudo systemctl daemon-reload
-sudo systemctl enable odoo
-sudo systemctl start odoo
+sudo systemctl enable --now odoo
 
-# Install Nginx from the official repository
-echo -e "\n---- Install Nginx ----"
-sudo dnf install -y yum-utils
-sudo yum-config-manager --add-repo https://nginx.org/packages/rhel/9/x86_64/nginx.repo
-sudo dnf install -y nginx
-sudo systemctl enable nginx
-sudo systemctl start nginx
+# Install the latest version of Nginx from official repository
+sudo yum install -y epel-release
+sudo yum install -y nginx
+sudo systemctl enable --now nginx
 
-# Fetch the current hostname
-HOSTNAME=$(hostname -f)
-
-# Generate a self-signed SSL certificate
-echo -e "\n---- Generating Self-Signed SSL Certificate ----"
-sudo mkdir -p /etc/ssl/nginx
-sudo openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 \
-    -subj "/C=US/ST=SomeState/L=SomeCity/O=SomeOrganization/OU=IT/CN=$HOSTNAME" \
-    -keyout /etc/ssl/nginx/server.key -out /etc/ssl/nginx/server.crt
-
-# Create Nginx configuration file with dynamic hostname
-echo -e "\n---- Configuring Nginx ----"
+# Create the Nginx configuration for Odoo
 cat <<EOF | sudo tee /etc/nginx/conf.d/odoo.conf
-#odoo server
+# Odoo server
 upstream odoo {
   server 127.0.0.1:8069;
 }
@@ -163,16 +115,16 @@ map \$http_upgrade \$connection_upgrade {
   ''      close;
 }
 
-# http -> https
+# HTTP to HTTPS redirection
 server {
   listen 80;
-  server_name $HOSTNAME;
+  server_name $hostname;
   rewrite ^(.*) https://\$host\$1 permanent;
 }
 
 server {
   listen 443 ssl;
-  server_name $HOSTNAME;
+  server_name $hostname;
   proxy_read_timeout 720s;
   proxy_connect_timeout 720s;
   proxy_send_timeout 720s;
@@ -183,7 +135,7 @@ server {
   ssl_certificate_key /etc/ssl/nginx/server.key;
   ssl_session_timeout 30m;
   ssl_protocols TLSv1.2;
-  ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
+  ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
   ssl_prefer_server_ciphers off;
 
   # log
@@ -223,17 +175,7 @@ server {
 }
 EOF
 
-# Restart Nginx to apply changes
+# Restart Nginx to apply the configuration
 sudo systemctl restart nginx
 
-# Configure firewall
-echo -e "\n---- Configuring Firewall ----"
-sudo firewall-cmd --permanent --add-service=http
-sudo firewall-cmd --permanent --add-service=https
-sudo firewall-cmd --permanent --add-port=5432/tcp
-sudo firewall-cmd --reload
-
-echo "-----------------------------------------------------------"
-echo "Done! The Odoo production platform is ready on Red Hat 9:"
-echo "You can start developing. Have fun!"
-echo "-----------------------------------------------------------"
+echo "Odoo $odoo_version and Nginx have been installed and configured with hostname $hostname!"
