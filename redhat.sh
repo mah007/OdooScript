@@ -28,11 +28,21 @@ hostname=$(hostname)
 # Enable Code Ready Repository and Development Tools
 sudo subscription-manager repos --enable codeready-builder-for-rhel-9-x86_64-rpms
 sudo yum groupinstall -y "Development Tools"
-sudo yum install -y git gcc redhat-rpm-config libxslt-devel bzip2-devel openldap-devel libjpeg-devel freetype-devel curl unzip openssl-devel wget yum-utils make libffi-devel zlib-devel tar libpq-devel
+sudo yum install -y git gcc redhat-rpm-config libxslt-devel bzip2-devel openldap-devel libjpeg-devel freetype-devel curl unzip openssl-devel wget yum-utils make libffi-devel zlib-devel tar libpq-devel python3.11 python3.11-devel python3.11-pip
 
-# Enable Python 3.11 and install necessary packages
-sudo yum install -y python3.11 python3.11-pip python3.11-devel
-sudo yum install -y python3.11-babel python3.11-bs4 python3.11-cffi-backend python3.11-cryptography python3.11-dateutil python3.11-docutils python3.11-feedparser python3.11-funcsigs python3.11-gevent python3.11-greenlet python3.11-html2text python3.11-html5lib python3.11-jinja2 python3.11-lxml python3.11-mako python3.11-markupsafe python3.11-mock python3.11-ofxparse python3.11-openssl python3.11-passlib python3.11-pbr python3.11-pillow python3.11-psutil python3.11-psycopg2 python3.11-pydot python3.11-pygments python3.11-pyparsing python3.11-pypdf2 python3.11-renderpm python3.11-reportlab python3.11-reportlab-accel python3.11-roman python3.11-serial python3.11-stdnum python3.11-suds python3.11-tz python3.11-usb python3.11-werkzeug python3.11-xlsxwriter python3.11-yaml
+# Set Python 3.11 as the default python3 alternative
+sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+sudo update-alternatives --config python3
+
+# Set pip3.11 as the default pip3 and pip alternative
+sudo update-alternatives --install /usr/bin/pip3 pip3 /usr/bin/pip3.11 1
+sudo update-alternatives --install /usr/bin/pip pip /usr/bin/pip3.11 1
+sudo update-alternatives --config pip3
+sudo update-alternatives --config pip
+
+# Install Python libraries via pip for Python 3.11
+sudo python3.11 -m pip install --upgrade pip
+sudo python3.11 -m pip install Babel beautifulsoup4 cffi cryptography dateutil docutils feedparser funcsigs gevent greenlet html2text html5lib jinja2 lxml mako MarkupSafe mock ofxparse pyopenssl passlib pbr pillow psutil psycopg2-binary pydot pygments pyparsing PyPDF2 renderpm reportlab roman serial stdnum suds-jurko pytz pyusb Werkzeug xlsxwriter pyyaml
 
 # Install PostgreSQL from official repository
 sudo yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm
