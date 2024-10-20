@@ -31,13 +31,11 @@ sudo yum groupinstall -y "Development Tools"
 sudo yum install -y git gcc redhat-rpm-config libxslt-devel bzip2-devel openldap-devel libjpeg-devel freetype-devel curl unzip openssl-devel wget yum-utils make libffi-devel zlib-devel tar libpq-devel python3.11 python3.11-devel python3.11-pip
 
 # Set Python 3.11 as the default python3 alternative
-sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
-sudo update-alternatives --config python3
+sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
+sudo update-alternatives --config python
 
 # Set pip3.11 as the default pip3 and pip alternative
-sudo update-alternatives --install /usr/bin/pip3 pip3 /usr/bin/pip3.11 1
 sudo update-alternatives --install /usr/bin/pip pip /usr/bin/pip3.11 1
-sudo update-alternatives --config pip3
 sudo update-alternatives --config pip
 
 # Install Python libraries via pip for Python 3.11
@@ -107,7 +105,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now odoo
 
 # Install the latest version of Nginx from official repository
-sudo yum install -y epel-release
+#sudo yum install -y epel-release
 sudo yum install -y nginx
 sudo systemctl enable --now nginx
 
