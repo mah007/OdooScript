@@ -49,7 +49,7 @@ sudo /usr/pgsql-16/bin/postgresql-16-setup initdb
 sudo systemctl enable --now postgresql-16
 
 # Create a PostgreSQL user for Odoo
-su - postgres -c "createuser -s $odoo_version"
+su - postgres -c "createuser -s odoo"
 
 # Install wkhtmltox
 sudo yum install -y https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox-0.12.6.1-2.almalinux9.x86_64.rpm
