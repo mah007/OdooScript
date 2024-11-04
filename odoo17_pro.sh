@@ -142,15 +142,15 @@ mkdir /etc/odoo
 mkdir /var/log/odoo
 touch /etc/odoo/odoo.conf
 touch /var/log/odoo/odoo-server.log
-chown odoo:odoo /var/log/odoo/odoo-server.log
-chown odoo:odoo /etc/odoo/odoo.conf
+chown -R odoo:odoo /var/log/odoo
+chown -R odoo:odoo /etc/odoo
 cd /odoo
 
 sudo git clone --depth 1 --branch "$OE_BRANCH" https://www.github.com/odoo/odoo 
 cd /
 
 chown -R odoo:odoo /odoo
-
+su - $OE_USER -s /bin/bash -c "pip3 install -r https://raw.githubusercontent.com/odoo/odoo/"$OE_BRANCH"/requirements.txt --user" 
 cd /root
 wget https://raw.githubusercontent.com/mah007/OdooScript/14.0/odoo.service
 cp odoo.service /etc/systemd/system
