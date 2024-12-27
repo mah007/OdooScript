@@ -14,6 +14,7 @@ select_odoo_version() {
     echo "2) Odoo 15.0"
     echo "3) Odoo 16.0"
     echo "4) Odoo 17.0"
+    echo "4) Odoo 18.0"
     read -rp "Enter your choice (1-4): " choice
 
     case $choice in
@@ -21,6 +22,7 @@ select_odoo_version() {
         2) OE_BRANCH="15.0";;
         3) OE_BRANCH="16.0";;
         4) OE_BRANCH="17.0";;
+        4) OE_BRANCH="18.0";;
         *) echo "Invalid choice. Please enter a number between 1 and 4."; exit 1;;
     esac
 }
