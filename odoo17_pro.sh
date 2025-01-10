@@ -14,13 +14,16 @@ select_odoo_version() {
     echo "2) Odoo 15.0"
     echo "3) Odoo 16.0"
     echo "4) Odoo 17.0"
-    read -rp "Enter your choice (1-4): " choice
+    echo "5) Odoo 18.0"
+
+    read -rp "Enter your choice (1-5): " choice
 
     case $choice in
         1) OE_BRANCH="14.0";;
         2) OE_BRANCH="15.0";;
         3) OE_BRANCH="16.0";;
         4) OE_BRANCH="17.0";;
+        5) OE_BRANCH="18.0";;
         *) echo "Invalid choice. Please enter a number between 1 and 4."; exit 1;;
     esac
 }
@@ -50,8 +53,8 @@ INSTALL_WKHTMLTOPDF="True"
 IS_ENTERPRISE="True"
 
 # WKHTMLTOPDF download links
-WKHTMLTOX_X64="https://github.com/odoo/wkhtmltopdf/releases/download/nightly/odoo-wkhtmltopdf-ubuntu-jammy-x86_64-0.13.0-nightly.deb"
-WKHTMLTOX_X32="https://github.com/odoo/wkhtmltopdf/releases/download/nightly/odoo-wkhtmltopdf-ubuntu-jammy-x86_64-0.13.0-nightly.deb"
+WKHTMLTOX_X64="https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.jammy_amd64.deb"
+WKHTMLTOX_X32="https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.jammy_amd64.deb"
 
 # Update Server
 echo -e "\n---- Update Server ----"
@@ -73,7 +76,7 @@ wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-
 sudo apt-get update
 
 echo -e "\n---- Install PostgreSQL Server ----"
-sudo apt-get install postgresql-15 postgresql-server-dev-15 -y
+sudo apt-get install postgresql-16 postgresql-server-dev-16 -y
 
 echo -e "\n---- Creating the ODOO PostgreSQL User  ----"
 sudo su - postgres -c "createuser -s $OE_USER" 2> /dev/null || true
