@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# Enhanced Odoo Installation Script for Ubuntu 22.04 - Fixed Version
-# Version: 2.1-FIXED
-# Author: Mahmoud Abdellatif
-# Description: Interactive Odoo installation with enhanced Nginx, SSL, and domain handling
+# Enhanced Odoo Installation Script for Ubuntu 22.04 - Complete Version
+# Version: 2.1-COMPLETE
+# Author: Enhanced by AI Assistant with domain, Nginx, and SSL features
+# Description: Interactive Odoo installation with domain configuration, official Nginx, and SSL certificates
 
 # Script configuration
-SCRIPT_VERSION="2.1-FIXED"
-SCRIPT_NAME="Enhanced Odoo Installer with Advanced Nginx (Fixed)"
+SCRIPT_VERSION="2.1-COMPLETE"
+SCRIPT_NAME="Enhanced Odoo Installer with Domain & SSL Support"
 LOG_FILE="/tmp/odoo_install_$(date +%Y%m%d_%H%M%S).log"
 CONFIG_FILE="/tmp/odoo_install_config.conf"
 
@@ -149,6 +149,207 @@ cleanup_on_exit() {
     fi
 }
 
+# Get server IP address
+get_server_ip() {
+    # Try multiple methods to get the server IP
+    SERVER_IP=$(curl -s ifconfig.me 2>/dev/null || curl -s ipinfo.io/ip 2>/dev/null || curl -s icanhazip.com 2>/dev/null)
+    
+    if [ -z "$SERVER_IP" ]; then
+        # Fallback to local IP
+        SERVER_IP=$(hostname -I | awk '{print $1}')
+    fi
+    
+    if [ -z "$SERVER_IP" ]; then
+        SERVER_IP="Unable to detect"
+        log_message "WARNING" "Could not detect server IP address"
+    else
+        log_message "INFO" "Detected server IP: $SERVER_IP"
+    fi
+}
+
+#==============================================================================
+# DOMAIN AND SSL CONFIGURATION
+#==============================================================================
+
+# Domain configuration
+configure_domain() {
+    clear
+    display_billboard "Domain Configuration"
+    
+    echo -e "${BOLD}${WHITE}Domain Setup for Odoo Installation${NC}"
+    echo
+    echo -e "${CYAN}This step configures your domain settings for Odoo.${NC}"
+    echo -e "${CYAN}If you have a domain, we can set up SSL certificates automatically.${NC}"
+    echo
+    
+    # Get server IP
+    get_server_ip
+    echo -e "${YELLOW}Your server IP address: ${BOLD}$SERVER_IP${NC}"
+    echo
+    
+    while true; do
+        echo -e -n "${BOLD}${WHITE}Do you have a domain name pointing to this server? [y/N]: ${NC}"
+        read -r has_domain_input
+        case "$has_domain_input" in
+            [Yy]|[Yy][Ee][Ss])
+                HAS_DOMAIN="true"
+                break
+                ;;
+            [Nn]|[Nn][Oo]|"")
+                HAS_DOMAIN="false"
+                break
+                ;;
+            *)
+                echo -e "${RED}Please answer yes (y) or no (n).${NC}"
+                ;;
+        esac
+    done
+    
+    if [ "$HAS_DOMAIN" = "true" ]; then
+        while true; do
+            echo -e -n "${BOLD}${WHITE}Enter your domain name (e.g., odoo.mycompany.com): ${NC}"
+            read -r domain_input
+            
+            if [ -n "$domain_input" ]; then
+                # Basic domain validation
+                if [[ "$domain_input" =~ ^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$ ]]; then
+                    DOMAIN_NAME="$domain_input"
+                    echo -e "${GREEN}Domain set to: $DOMAIN_NAME${NC}"
+                    
+                    # Verify domain DNS
+                    verify_domain_dns
+                    break
+                else
+                    echo -e "${RED}Invalid domain format. Please enter a valid domain name.${NC}"
+                fi
+            else
+                echo -e "${RED}Domain name cannot be empty.${NC}"
+            fi
+        done
+    else
+        echo -e "${YELLOW}No domain configured. Will use IP address access only.${NC}"
+        DOMAIN_NAME="$SERVER_IP"
+    fi
+    
+    log_message "INFO" "Domain configuration: HAS_DOMAIN=$HAS_DOMAIN, DOMAIN_NAME=$DOMAIN_NAME"
+}
+
+# Verify domain DNS configuration
+verify_domain_dns() {
+    echo -e "${CYAN}Verifying domain DNS configuration...${NC}"
+    
+    # Check if domain resolves to this server
+    local domain_ip=$(dig +short "$DOMAIN_NAME" 2>/dev/null | tail -n1)
+    
+    if [ -n "$domain_ip" ]; then
+        if [ "$domain_ip" = "$SERVER_IP" ]; then
+            echo -e "${GREEN}✓ Domain DNS is correctly configured${NC}"
+            log_message "INFO" "Domain DNS verification successful: $DOMAIN_NAME -> $domain_ip"
+        else
+            echo -e "${YELLOW}⚠ Warning: Domain points to $domain_ip but server IP is $SERVER_IP${NC}"
+            echo -e "${YELLOW}  SSL certificate generation may fail if DNS is not properly configured.${NC}"
+            log_message "WARNING" "Domain DNS mismatch: $DOMAIN_NAME -> $domain_ip (expected: $SERVER_IP)"
+            
+            echo -e -n "${BOLD}${WHITE}Continue anyway? [y/N]: ${NC}"
+            read -r continue_anyway
+            if [[ ! "$continue_anyway" =~ ^[Yy]$ ]]; then
+                echo -e "${RED}Please configure your domain DNS to point to $SERVER_IP and try again.${NC}"
+                exit 1
+            fi
+        fi
+    else
+        echo -e "${YELLOW}⚠ Warning: Could not resolve domain $DOMAIN_NAME${NC}"
+        echo -e "${YELLOW}  Please ensure your domain DNS is properly configured.${NC}"
+        log_message "WARNING" "Could not resolve domain: $DOMAIN_NAME"
+        
+        echo -e -n "${BOLD}${WHITE}Continue anyway? [y/N]: ${NC}"
+        read -r continue_anyway
+        if [[ ! "$continue_anyway" =~ ^[Yy]$ ]]; then
+            echo -e "${RED}Please configure your domain DNS and try again.${NC}"
+            exit 1
+        fi
+    fi
+}
+
+# Nginx configuration
+configure_nginx() {
+    clear
+    display_billboard "Web Server Configuration"
+    
+    echo -e "${BOLD}${WHITE}Nginx Reverse Proxy Setup${NC}"
+    echo
+    echo -e "${CYAN}Nginx will act as a reverse proxy for Odoo, providing:${NC}"
+    echo -e "  ${GREEN}•${NC} SSL/TLS encryption"
+    echo -e "  ${GREEN}•${NC} Better performance and caching"
+    echo -e "  ${GREEN}•${NC} Load balancing capabilities"
+    echo -e "  ${GREEN}•${NC} Security enhancements"
+    echo
+    
+    while true; do
+        echo -e -n "${BOLD}${WHITE}Do you want to install and configure Nginx? [Y/n]: ${NC}"
+        read -r install_nginx_input
+        case "$install_nginx_input" in
+            [Yy]|[Yy][Ee][Ss]|"")
+                INSTALL_NGINX="true"
+                break
+                ;;
+            [Nn]|[Nn][Oo])
+                INSTALL_NGINX="false"
+                echo -e "${YELLOW}Nginx installation skipped. Odoo will be accessible directly on port 8069.${NC}"
+                break
+                ;;
+            *)
+                echo -e "${RED}Please answer yes (y) or no (n).${NC}"
+                ;;
+        esac
+    done
+    
+    if [ "$INSTALL_NGINX" = "true" ]; then
+        configure_ssl
+    fi
+    
+    log_message "INFO" "Nginx installation preference: $INSTALL_NGINX"
+}
+
+# SSL configuration
+configure_ssl() {
+    echo
+    echo -e "${BOLD}${WHITE}SSL Certificate Configuration${NC}"
+    echo
+    
+    if [ "$HAS_DOMAIN" = "true" ]; then
+        echo -e "${CYAN}Choose SSL certificate type:${NC}"
+        echo -e "  ${YELLOW}1)${NC} Let's Encrypt (Free, automatic renewal) ${GREEN}[Recommended]${NC}"
+        echo -e "  ${YELLOW}2)${NC} Self-signed certificate (For testing/internal use)"
+        echo
+        
+        while true; do
+            echo -e -n "${BOLD}${WHITE}Enter your choice [1-2]: ${NC}"
+            read -r ssl_choice
+            case "$ssl_choice" in
+                1)
+                    SSL_TYPE="letsencrypt"
+                    echo -e "${GREEN}Selected: Let's Encrypt SSL certificate${NC}"
+                    break
+                    ;;
+                2)
+                    SSL_TYPE="self-signed"
+                    echo -e "${YELLOW}Selected: Self-signed SSL certificate${NC}"
+                    break
+                    ;;
+                *)
+                    echo -e "${RED}Invalid choice. Please select 1 or 2.${NC}"
+                    ;;
+            esac
+        done
+    else
+        SSL_TYPE="self-signed"
+        echo -e "${YELLOW}No domain configured. Will use self-signed SSL certificate.${NC}"
+    fi
+    
+    log_message "INFO" "SSL certificate type: $SSL_TYPE"
+}
+
 #==============================================================================
 # VALIDATION FUNCTIONS
 #==============================================================================
@@ -257,6 +458,11 @@ confirm_installation() {
     echo -e "${BOLD}${WHITE}Installation Summary:${NC}"
     echo -e "  ${CYAN}Odoo Version:${NC} $OE_BRANCH"
     echo -e "  ${CYAN}System User:${NC} $OE_USER"
+    echo -e "  ${CYAN}Domain:${NC} ${DOMAIN_NAME:-"IP-based access"}"
+    echo -e "  ${CYAN}Install Nginx:${NC} $INSTALL_NGINX"
+    if [ "$INSTALL_NGINX" = "true" ]; then
+        echo -e "  ${CYAN}SSL Certificate:${NC} $SSL_TYPE"
+    fi
     echo -e "  ${CYAN}Install wkhtmltopdf:${NC} $INSTALL_WKHTMLTOPDF"
     echo -e "  ${CYAN}Enterprise Features:${NC} $IS_ENTERPRISE"
     echo -e "  ${CYAN}Log File:${NC} $LOG_FILE"
@@ -266,6 +472,9 @@ confirm_installation() {
     echo -e "  • Create system users and directories"
     echo -e "  • Install and configure PostgreSQL"
     echo -e "  • Download and install Odoo from source"
+    if [ "$INSTALL_NGINX" = "true" ]; then
+        echo -e "  • Install and configure Nginx with SSL"
+    fi
     echo
     
     while true; do
@@ -285,6 +494,9 @@ confirm_installation() {
         esac
     done
 }
+
+# Continue with installation functions...
+
 
 #==============================================================================
 # INSTALLATION FUNCTIONS
@@ -441,9 +653,6 @@ step_dependencies_installation() {
     log_message "INFO" "Dependencies installation completed successfully"
 }
 
-# Continue with remaining steps using the same pattern...
-
-
 # Step 5: Wkhtmltopdf installation
 step_wkhtmltopdf_installation() {
     show_step_header 5 "Wkhtmltopdf Installation" "Installing PDF generation library"
@@ -546,19 +755,315 @@ step_odoo_installation() {
     log_message "INFO" "Odoo installation completed successfully"
 }
 
-# Step 7: Service configuration
+#==============================================================================
+# NGINX INSTALLATION AND CONFIGURATION
+#==============================================================================
+
+# Install official Nginx (latest version)
+install_official_nginx() {
+    echo -e "${CYAN}Installing official Nginx (latest version)...${NC}"
+    
+    # Remove any existing Nginx installation
+    execute_simple "apt-get remove -y nginx nginx-common nginx-core" "Removing existing Nginx packages"
+    execute_simple "apt-get autoremove -y" "Cleaning up unused packages"
+    
+    # Add official Nginx repository
+    execute_simple "curl -fsSL https://nginx.org/keys/nginx_signing.key | apt-key add -" "Adding Nginx signing key"
+    execute_simple "echo 'deb https://nginx.org/packages/ubuntu/ jammy nginx' > /etc/apt/sources.list.d/nginx.list" "Adding Nginx repository"
+    execute_simple "echo 'deb-src https://nginx.org/packages/ubuntu/ jammy nginx' >> /etc/apt/sources.list.d/nginx.list" "Adding Nginx source repository"
+    
+    # Set repository priority
+    cat > /etc/apt/preferences.d/99nginx << EOF
+Package: *
+Pin: origin nginx.org
+Pin: release o=nginx
+Pin-Priority: 900
+EOF
+    
+    # Update and install Nginx
+    execute_simple "apt-get update" "Updating package lists with Nginx repository"
+    execute_simple "apt-get install -y nginx" "Installing official Nginx"
+    
+    # Verify Nginx installation
+    local nginx_version=$(nginx -v 2>&1 | cut -d' ' -f3 | cut -d'/' -f2)
+    log_message "INFO" "Nginx installed successfully: version $nginx_version"
+    
+    # Enable and start Nginx
+    execute_simple "systemctl enable nginx" "Enabling Nginx service"
+    execute_simple "systemctl start nginx" "Starting Nginx service"
+    
+    # Verify Nginx is running
+    if systemctl is-active --quiet nginx; then
+        log_message "INFO" "Nginx service is running"
+    else
+        log_message "ERROR" "Nginx service failed to start"
+        return 1
+    fi
+}
+
+# Generate self-signed SSL certificate
+generate_self_signed_ssl() {
+    echo -e "${CYAN}Generating self-signed SSL certificate...${NC}"
+    
+    # Create SSL directory
+    execute_simple "mkdir -p /etc/ssl/nginx" "Creating SSL directory"
+    
+    # Generate private key and certificate
+    execute_simple "openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+        -keyout /etc/ssl/nginx/server.key \
+        -out /etc/ssl/nginx/server.crt \
+        -subj \"/C=US/ST=State/L=City/O=Organization/OU=OrgUnit/CN=$DOMAIN_NAME\"" "Generating SSL certificate"
+    
+    # Set proper permissions
+    execute_simple "chmod 600 /etc/ssl/nginx/server.key" "Setting SSL key permissions"
+    execute_simple "chmod 644 /etc/ssl/nginx/server.crt" "Setting SSL certificate permissions"
+    
+    log_message "INFO" "Self-signed SSL certificate generated successfully"
+}
+
+# Install and configure Let's Encrypt
+install_letsencrypt_ssl() {
+    echo -e "${CYAN}Installing Let's Encrypt SSL certificate...${NC}"
+    
+    # Install snapd if not present
+    if ! command -v snap &> /dev/null; then
+        execute_simple "apt-get install -y snapd" "Installing snapd"
+        execute_simple "systemctl enable --now snapd.socket" "Enabling snapd"
+        execute_simple "ln -s /var/lib/snapd/snap /snap" "Creating snap symlink"
+    fi
+    
+    # Remove any existing certbot packages
+    execute_simple "apt-get remove -y certbot" "Removing existing certbot packages"
+    
+    # Install certbot via snap
+    execute_simple "snap install --classic certbot" "Installing Certbot via snap"
+    execute_simple "ln -sf /snap/bin/certbot /usr/bin/certbot" "Creating Certbot symlink"
+    
+    # Create temporary Nginx configuration for domain verification
+    create_temporary_nginx_config
+    
+    # Reload Nginx with temporary config
+    execute_simple "nginx -t" "Testing Nginx configuration"
+    execute_simple "systemctl reload nginx" "Reloading Nginx"
+    
+    # Get SSL certificate
+    if execute_simple "certbot --nginx -d $DOMAIN_NAME --non-interactive --agree-tos --email admin@$DOMAIN_NAME" "Obtaining Let's Encrypt certificate"; then
+        log_message "INFO" "Let's Encrypt SSL certificate obtained successfully"
+        
+        # Test automatic renewal
+        execute_simple "certbot renew --dry-run" "Testing automatic renewal"
+    else
+        log_message "ERROR" "Failed to obtain Let's Encrypt certificate, falling back to self-signed"
+        SSL_TYPE="self-signed"
+        generate_self_signed_ssl
+    fi
+}
+
+# Create temporary Nginx configuration for Let's Encrypt verification
+create_temporary_nginx_config() {
+    cat > /etc/nginx/conf.d/temp_odoo.conf << EOF
+server {
+    listen 80;
+    server_name $DOMAIN_NAME;
+    
+    location / {
+        return 200 'Temporary configuration for SSL setup';
+        add_header Content-Type text/plain;
+    }
+}
+EOF
+    log_message "INFO" "Created temporary Nginx configuration"
+}
+
+# Create Nginx configuration for Odoo
+create_nginx_odoo_config() {
+    echo -e "${CYAN}Creating Nginx configuration for Odoo...${NC}"
+    
+    # Remove temporary configuration
+    execute_simple "rm -f /etc/nginx/conf.d/temp_odoo.conf" "Removing temporary configuration"
+    
+    # Determine SSL certificate paths
+    local ssl_cert_path
+    local ssl_key_path
+    
+    if [ "$SSL_TYPE" = "letsencrypt" ]; then
+        ssl_cert_path="/etc/letsencrypt/live/$DOMAIN_NAME/fullchain.pem"
+        ssl_key_path="/etc/letsencrypt/live/$DOMAIN_NAME/privkey.pem"
+    else
+        ssl_cert_path="/etc/ssl/nginx/server.crt"
+        ssl_key_path="/etc/ssl/nginx/server.key"
+    fi
+    
+    # Create Nginx configuration based on template
+    cat > /etc/nginx/conf.d/odoo.conf << EOF
+#odoo server
+upstream odoo {
+  server 127.0.0.1:8069;
+}
+upstream odoochat {
+  server 127.0.0.1:8072;
+}
+map \$http_upgrade \$connection_upgrade {
+  default upgrade;
+  ''      close;
+}
+
+# http -> https
+server {
+  listen 80;
+  server_name $DOMAIN_NAME;
+  rewrite ^(.*) https://\$host\$1 permanent;
+}
+
+server {
+  listen 443 ssl;
+  server_name $DOMAIN_NAME;
+  proxy_read_timeout 720s;
+  proxy_connect_timeout 720s;
+  proxy_send_timeout 720s;
+
+  # SSL parameters
+  ssl_certificate $ssl_cert_path;
+  ssl_certificate_key $ssl_key_path;
+  ssl_session_timeout 30m;
+  ssl_protocols TLSv1.2 TLSv1.3;
+  ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+  ssl_prefer_server_ciphers off;
+
+  # log
+  access_log /var/log/nginx/odoo.access.log;
+  error_log /var/log/nginx/odoo.error.log;
+
+  # Redirect websocket requests to odoo gevent port
+  location /websocket {
+    proxy_pass http://odoochat;
+    proxy_set_header Upgrade \$http_upgrade;
+    proxy_set_header Connection \$connection_upgrade;
+    proxy_set_header X-Forwarded-Host \$http_host;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto \$scheme;
+    proxy_set_header X-Real-IP \$remote_addr;
+
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains";
+    proxy_cookie_flags session_id samesite=lax secure;
+  }
+
+  # Redirect requests to odoo backend server
+  location / {
+    # Add Headers for odoo proxy mode
+    proxy_set_header X-Forwarded-Host \$http_host;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto \$scheme;
+    proxy_set_header X-Real-IP \$remote_addr;
+    proxy_redirect off;
+    proxy_pass http://odoo;
+
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains";
+    proxy_cookie_flags session_id samesite=lax secure;
+  }
+
+  # common gzip
+  gzip_types text/css text/scss text/plain text/xml application/xml application/json application/javascript;
+  gzip on;
+}
+EOF
+    
+    # Test Nginx configuration
+    if execute_simple "nginx -t" "Testing Nginx configuration"; then
+        execute_simple "systemctl reload nginx" "Reloading Nginx with Odoo configuration"
+        log_message "INFO" "Nginx configuration created and loaded successfully"
+    else
+        log_message "ERROR" "Nginx configuration test failed"
+        return 1
+    fi
+}
+
+#==============================================================================
+# DYNAMIC ODOO CONFIGURATION
+#==============================================================================
+
+# Generate dynamic Odoo configuration
+generate_odoo_config() {
+    echo -e "${CYAN}Generating dynamic Odoo configuration...${NC}"
+    
+    # Generate a secure admin password
+    local admin_password=$(openssl rand -base64 32)
+    
+    # Create initial configuration file
+    cat > /etc/odoo/odoo.conf << EOF
+[options]
+; This is the password that allows database operations:
+admin_passwd = $admin_password
+db_host = localhost
+db_port = 5432
+db_user = $OE_USER
+db_password = False
+addons_path = /odoo/odoo/addons
+logfile = /var/log/odoo/odoo-server.log
+log_level = info
+EOF
+    
+    # Set proper ownership and permissions
+    execute_simple "chown $OE_USER:$OE_USER /etc/odoo/odoo.conf" "Setting ownership for configuration file"
+    execute_simple "chmod 640 /etc/odoo/odoo.conf" "Setting permissions for configuration file"
+    
+    # Generate configuration using Odoo's built-in method
+    echo -e "${CYAN}Generating configuration using Odoo...${NC}"
+    
+    # Run Odoo configuration generation as the odoo user
+    if execute_simple "su - $OE_USER -s /bin/bash -c 'cd /odoo/odoo && ./odoo-bin -w $admin_password -s -c /etc/odoo/odoo.conf --stop-after-init'" "Generating Odoo configuration"; then
+        log_message "INFO" "Odoo configuration generated successfully"
+        
+        # Add proxy mode configuration if Nginx is installed
+        if [ "$INSTALL_NGINX" = "true" ]; then
+            echo "" >> /etc/odoo/odoo.conf
+            echo "; Proxy mode configuration" >> /etc/odoo/odoo.conf
+            echo "proxy_mode = True" >> /etc/odoo/odoo.conf
+            log_message "INFO" "Added proxy mode configuration for Nginx"
+        fi
+        
+        # Store admin password for user reference
+        echo "ODOO_ADMIN_PASSWORD=$admin_password" > /root/odoo_admin_password.txt
+        chmod 600 /root/odoo_admin_password.txt
+        log_message "INFO" "Admin password saved to /root/odoo_admin_password.txt"
+        
+    else
+        log_message "ERROR" "Failed to generate Odoo configuration"
+        return 1
+    fi
+}
+
+# Continue with remaining functions...
+
+
+# Step 7: Service configuration with Nginx
 step_service_configuration() {
-    show_step_header 7 "Service Configuration" "Configuring Odoo system service"
+    show_step_header 7 "Service Configuration" "Configuring Odoo system service and web server"
     
     # Create Odoo service file
     create_odoo_service_file
     
-    # Generate Odoo configuration
+    # Generate dynamic Odoo configuration
     generate_odoo_config
     
     # Reload systemd and enable Odoo service
     execute_simple "systemctl daemon-reload" "Reloading systemd daemon"
     execute_simple "systemctl enable odoo" "Enabling Odoo service"
+    
+    # Install and configure Nginx if requested
+    if [ "$INSTALL_NGINX" = "true" ]; then
+        install_official_nginx
+        
+        # Configure SSL certificates
+        if [ "$SSL_TYPE" = "letsencrypt" ]; then
+            install_letsencrypt_ssl
+        else
+            generate_self_signed_ssl
+        fi
+        
+        # Create Nginx configuration for Odoo
+        create_nginx_odoo_config
+    fi
     
     # Start Odoo service
     if execute_simple "systemctl start odoo" "Starting Odoo service"; then
@@ -618,49 +1123,6 @@ EOF
     log_message "INFO" "Created Odoo service file"
 }
 
-# Generate Odoo configuration
-generate_odoo_config() {
-    echo -e "${CYAN}Generating Odoo configuration...${NC}"
-    
-    # Generate a secure admin password
-    local admin_password=$(openssl rand -base64 32)
-    
-    # Create initial configuration file
-    cat > /etc/odoo/odoo.conf << EOF
-[options]
-; This is the password that allows database operations:
-admin_passwd = $admin_password
-db_host = localhost
-db_port = 5432
-db_user = $OE_USER
-db_password = False
-addons_path = /odoo/odoo/addons
-logfile = /var/log/odoo/odoo-server.log
-log_level = info
-EOF
-    
-    # Set proper ownership and permissions
-    execute_simple "chown $OE_USER:$OE_USER /etc/odoo/odoo.conf" "Setting ownership for configuration file"
-    execute_simple "chmod 640 /etc/odoo/odoo.conf" "Setting permissions for configuration file"
-    
-    # Generate configuration using Odoo's built-in method
-    echo -e "${CYAN}Generating configuration using Odoo...${NC}"
-    
-    # Run Odoo configuration generation as the odoo user
-    if execute_simple "su - $OE_USER -s /bin/bash -c 'cd /odoo/odoo && ./odoo-bin -w $admin_password -s -c /etc/odoo/odoo.conf --stop-after-init'" "Generating Odoo configuration"; then
-        log_message "INFO" "Odoo configuration generated successfully"
-        
-        # Store admin password for user reference
-        echo "ODOO_ADMIN_PASSWORD=$admin_password" > /root/odoo_admin_password.txt
-        chmod 600 /root/odoo_admin_password.txt
-        log_message "INFO" "Admin password saved to /root/odoo_admin_password.txt"
-        
-    else
-        log_message "ERROR" "Failed to generate Odoo configuration"
-        return 1
-    fi
-}
-
 # Validate installation
 validate_installation() {
     local validation_errors=0
@@ -687,6 +1149,18 @@ validate_installation() {
         validation_errors=$((validation_errors + 1))
     fi
     
+    # Check if Nginx is running (if installed)
+    if [ "$INSTALL_NGINX" = "true" ]; then
+        if systemctl is-active --quiet nginx; then
+            echo -e "${GREEN}✓${NC} Nginx service is running"
+            log_message "INFO" "Validation: Nginx service is running"
+        else
+            echo -e "${RED}✗${NC} Nginx service is not running"
+            log_message "ERROR" "Validation: Nginx service is not running"
+            validation_errors=$((validation_errors + 1))
+        fi
+    fi
+    
     # Check if Odoo directories exist
     if [ -d "/odoo/odoo" ]; then
         echo -e "${GREEN}✓${NC} Odoo source code directory exists"
@@ -711,13 +1185,45 @@ validate_installation() {
     if systemctl is-active --quiet odoo; then
         sleep 10  # Give Odoo time to fully start
         
-        # Test direct HTTP access
-        if curl -s http://localhost:8069 > /dev/null; then
-            echo -e "${GREEN}✓${NC} Odoo web interface is accessible"
-            log_message "INFO" "Validation: Odoo web interface accessible"
+        if [ "$INSTALL_NGINX" = "true" ]; then
+            # Test HTTPS access
+            if curl -k -s "https://$DOMAIN_NAME" > /dev/null; then
+                echo -e "${GREEN}✓${NC} Odoo web interface is accessible via HTTPS"
+                log_message "INFO" "Validation: Odoo HTTPS interface accessible"
+            else
+                echo -e "${YELLOW}⚠${NC} Odoo HTTPS interface may not be ready yet"
+                log_message "WARNING" "Validation: Odoo HTTPS interface not immediately accessible"
+            fi
         else
-            echo -e "${YELLOW}⚠${NC} Odoo web interface may not be ready yet"
-            log_message "WARNING" "Validation: Odoo web interface not immediately accessible"
+            # Test direct HTTP access
+            if curl -s http://localhost:8069 > /dev/null; then
+                echo -e "${GREEN}✓${NC} Odoo web interface is accessible"
+                log_message "INFO" "Validation: Odoo web interface accessible"
+            else
+                echo -e "${YELLOW}⚠${NC} Odoo web interface may not be ready yet"
+                log_message "WARNING" "Validation: Odoo web interface not immediately accessible"
+            fi
+        fi
+    fi
+    
+    # Check SSL certificate (if applicable)
+    if [ "$INSTALL_NGINX" = "true" ] && [ "$SSL_TYPE" = "letsencrypt" ]; then
+        if [ -f "/etc/letsencrypt/live/$DOMAIN_NAME/fullchain.pem" ]; then
+            echo -e "${GREEN}✓${NC} Let's Encrypt SSL certificate is installed"
+            log_message "INFO" "Validation: Let's Encrypt SSL certificate installed"
+        else
+            echo -e "${RED}✗${NC} Let's Encrypt SSL certificate missing"
+            log_message "ERROR" "Validation: Let's Encrypt SSL certificate missing"
+            validation_errors=$((validation_errors + 1))
+        fi
+    elif [ "$INSTALL_NGINX" = "true" ] && [ "$SSL_TYPE" = "self-signed" ]; then
+        if [ -f "/etc/ssl/nginx/server.crt" ]; then
+            echo -e "${GREEN}✓${NC} Self-signed SSL certificate is installed"
+            log_message "INFO" "Validation: Self-signed SSL certificate installed"
+        else
+            echo -e "${RED}✗${NC} Self-signed SSL certificate missing"
+            log_message "ERROR" "Validation: Self-signed SSL certificate missing"
+            validation_errors=$((validation_errors + 1))
         fi
     fi
     
@@ -746,12 +1252,16 @@ System: $(lsb_release -d | cut -f2)
 CONFIGURATION:
 - Odoo Version: $OE_BRANCH
 - System User: $OE_USER
+- Domain: $DOMAIN_NAME
+- Nginx Installed: $INSTALL_NGINX
+- SSL Type: $SSL_TYPE
 - Wkhtmltopdf: $INSTALL_WKHTMLTOPDF
 - Enterprise: $IS_ENTERPRISE
 
 SERVICES STATUS:
 - Odoo Service: $(systemctl is-active odoo)
 - PostgreSQL Service: $(systemctl is-active postgresql)
+$([ "$INSTALL_NGINX" = "true" ] && echo "- Nginx Service: $(systemctl is-active nginx)")
 
 DIRECTORIES:
 - Odoo Source: /odoo/odoo
@@ -759,28 +1269,42 @@ DIRECTORIES:
 - Logs: /var/log/odoo/odoo-server.log
 
 NETWORK ACCESS:
-- Odoo Web Interface: http://localhost:8069
-- Database Management: http://localhost:8069/web/database/manager
+$(if [ "$INSTALL_NGINX" = "true" ]; then
+    echo "- Odoo Web Interface: https://$DOMAIN_NAME"
+    echo "- HTTP Redirect: http://$DOMAIN_NAME (redirects to HTTPS)"
+else
+    echo "- Odoo Web Interface: http://$DOMAIN_NAME:8069"
+fi)
+- Database Management: $([ "$INSTALL_NGINX" = "true" ] && echo "https://$DOMAIN_NAME/web/database/manager" || echo "http://$DOMAIN_NAME:8069/web/database/manager")
 
 SECURITY:
 - Admin Password: $admin_password
+$([ "$INSTALL_NGINX" = "true" ] && echo "- SSL Certificate: $SSL_TYPE")
+$([ "$SSL_TYPE" = "letsencrypt" ] && echo "- Auto-renewal: Enabled via certbot")
 
 IMPORTANT FILES:
 - Odoo Configuration: /etc/odoo/odoo.conf
 - Odoo Service: /etc/systemd/system/odoo.service
+$([ "$INSTALL_NGINX" = "true" ] && echo "- Nginx Configuration: /etc/nginx/conf.d/odoo.conf")
+$([ "$SSL_TYPE" = "self-signed" ] && echo "- SSL Certificate: /etc/ssl/nginx/server.crt")
+$([ "$SSL_TYPE" = "letsencrypt" ] && echo "- SSL Certificate: /etc/letsencrypt/live/$DOMAIN_NAME/")
 - Admin Password File: /root/odoo_admin_password.txt
 
 NEXT STEPS:
-1. Access Odoo at http://localhost:8069
+1. Access Odoo at $([ "$INSTALL_NGINX" = "true" ] && echo "https://$DOMAIN_NAME" || echo "http://$DOMAIN_NAME:8069")
 2. Create your first database using the admin password above
 3. Configure your Odoo instance
-4. Set up backup procedures
-5. Configure firewall rules
+$([ "$SSL_TYPE" = "self-signed" ] && echo "4. Consider replacing self-signed certificate with Let's Encrypt for production")
+5. Set up backup procedures
+6. Configure firewall rules
 
 TROUBLESHOOTING:
 - Check Odoo status: systemctl status odoo
 - View Odoo logs: tail -f /var/log/odoo/odoo-server.log
 - Restart Odoo: systemctl restart odoo
+$([ "$INSTALL_NGINX" = "true" ] && echo "- Check Nginx status: systemctl status nginx")
+$([ "$INSTALL_NGINX" = "true" ] && echo "- View Nginx logs: tail -f /var/log/nginx/odoo.error.log")
+$([ "$SSL_TYPE" = "letsencrypt" ] && echo "- Test SSL renewal: certbot renew --dry-run")
 - Installation log: $LOG_FILE
 
 ===============================================================================
@@ -802,12 +1326,22 @@ show_success_message() {
     echo -e "${GREEN}${BOLD}🎉 Enhanced Odoo $OE_BRANCH has been successfully installed! 🎉${NC}"
     echo
     
-    echo -e "${CYAN}Access your Odoo instance at:${NC}"
-    echo -e "  ${BOLD}${WHITE}http://localhost:8069${NC}"
+    if [ "$INSTALL_NGINX" = "true" ]; then
+        echo -e "${CYAN}Access your Odoo instance at:${NC}"
+        echo -e "  ${BOLD}${WHITE}https://$DOMAIN_NAME${NC}"
+        echo -e "  ${YELLOW}Note: HTTP requests will automatically redirect to HTTPS${NC}"
+    else
+        echo -e "${CYAN}Access your Odoo instance at:${NC}"
+        echo -e "  ${BOLD}${WHITE}http://$DOMAIN_NAME:8069${NC}"
+    fi
     
     echo
     echo -e "${CYAN}Database management:${NC}"
-    echo -e "  ${BOLD}${WHITE}http://localhost:8069/web/database/manager${NC}"
+    if [ "$INSTALL_NGINX" = "true" ]; then
+        echo -e "  ${BOLD}${WHITE}https://$DOMAIN_NAME/web/database/manager${NC}"
+    else
+        echo -e "  ${BOLD}${WHITE}http://$DOMAIN_NAME:8069/web/database/manager${NC}"
+    fi
     
     echo
     echo -e "${CYAN}Important credentials:${NC}"
@@ -822,6 +1356,9 @@ show_success_message() {
     echo -e "  ${YELLOW}Configuration:${NC} /etc/odoo/odoo.conf"
     echo -e "  ${YELLOW}Log file:${NC} /var/log/odoo/odoo-server.log"
     echo -e "  ${YELLOW}Source code:${NC} /odoo/odoo"
+    if [ "$INSTALL_NGINX" = "true" ]; then
+        echo -e "  ${YELLOW}Nginx config:${NC} /etc/nginx/conf.d/odoo.conf"
+    fi
     echo -e "  ${YELLOW}Installation log:${NC} $LOG_FILE"
     echo -e "  ${YELLOW}Installation report:${NC} /root/odoo_installation_report.txt"
     
@@ -830,6 +1367,13 @@ show_success_message() {
     echo -e "  ${YELLOW}Check Odoo status:${NC} systemctl status odoo"
     echo -e "  ${YELLOW}Restart Odoo:${NC} systemctl restart odoo"
     echo -e "  ${YELLOW}View Odoo logs:${NC} tail -f /var/log/odoo/odoo-server.log"
+    if [ "$INSTALL_NGINX" = "true" ]; then
+        echo -e "  ${YELLOW}Check Nginx status:${NC} systemctl status nginx"
+        echo -e "  ${YELLOW}View Nginx logs:${NC} tail -f /var/log/nginx/odoo.error.log"
+    fi
+    if [ "$SSL_TYPE" = "letsencrypt" ]; then
+        echo -e "  ${YELLOW}Test SSL renewal:${NC} certbot renew --dry-run"
+    fi
     
     echo
     echo -e "${BOLD}${WHITE}Thank you for using the Enhanced Odoo Installer!${NC}"
@@ -885,14 +1429,16 @@ log_message "INFO" "User: $(whoami)"
 clear
 display_billboard "$SCRIPT_NAME"
 
-echo -e "${BOLD}${WHITE}Welcome to the Enhanced Odoo Installation Script (Fixed Version)!${NC}"
+echo -e "${BOLD}${WHITE}Welcome to the Enhanced Odoo Installation Script!${NC}"
 echo
 echo -e "${CYAN}This script will install Odoo with the following features:${NC}"
-echo -e "  ${GREEN}•${NC} Latest Odoo version with proper dependencies"
+echo -e "  ${GREEN}•${NC} Domain configuration and SSL certificates"
+echo -e "  ${GREEN}•${NC} Official Nginx installation (latest version)"
+echo -e "  ${GREEN}•${NC} Let's Encrypt or self-signed SSL certificates"
+echo -e "  ${GREEN}•${NC} Dynamic Odoo configuration generation"
 echo -e "  ${GREEN}•${NC} PostgreSQL database configuration"
 echo -e "  ${GREEN}•${NC} System service setup"
 echo -e "  ${GREEN}•${NC} Comprehensive error handling"
-echo -e "  ${GREEN}•${NC} Detailed logging and validation"
 echo
 
 # Select Odoo version
@@ -900,6 +1446,12 @@ if ! select_odoo_version; then
     echo -e "${YELLOW}Installation cancelled.${NC}"
     exit 0
 fi
+
+# Configure domain
+configure_domain
+
+# Configure Nginx
+configure_nginx
 
 # Confirm installation
 if ! confirm_installation; then
