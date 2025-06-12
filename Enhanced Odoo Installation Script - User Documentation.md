@@ -168,7 +168,7 @@ Enhanced Odoo Installer
 ### **Script Structure**
 
 ```bash
-enhanced_odoo_installer_complete.sh
+odoo_installer.sh
 ├── Global Variables & Configuration
 ├── Utility Functions
 │   ├── Logging system
@@ -533,14 +533,14 @@ We welcome contributions to improve the Enhanced Odoo Installer! Here's how you 
 ### **Development Setup**
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/enhanced-odoo-installer.git
-cd enhanced-odoo-installer
+git clone https://github.com/mah007/OdooScript.git
+cd OdooScript
 
 # Create a feature branch
 git checkout -b feature/your-feature-name
 
 # Make your changes and test
-./enhanced_odoo_installer_complete.sh
+./odoo_installer.sh
 
 # Commit and push
 git commit -m "Add your feature description"
@@ -575,17 +575,18 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Documentation**: [GitHub Wiki](https://github.com/yourusername/enhanced-odoo-installer/wiki)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/enhanced-odoo-installer/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/enhanced-odoo-installer/discussions)
+- **Documentation**: [GitHub Wiki](https://github.com/yourusername/OdooScript/wiki)
+- **Issues**: [GitHub Issues](https://github.com/yourusername/OdooScript/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/OdooScript/discussions)
 
 ---
 
 <div align="center">
 
-**Made with ❤️ for the Odoo community**
+**Made with ❤️ for the Odoo community By Mahmoud Abdel Latif**
 
-[Website](https://jilllkve.manus.space) • [Documentation](https://github.com/yourusername/enhanced-odoo-installer/wiki) • [Issues](https://github.com/yourusername/enhanced-odoo-installer/issues)
+
+[Website](https://mah007.net) • [Documentation](https://github.com/mah007/OdooScript/wiki) • [Issues](https://github.com/mah007/OdooScript/issues)
 
 </div>
 
