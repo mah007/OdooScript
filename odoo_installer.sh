@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Enhanced Odoo Installation Script for Ubuntu 22.04 - Complete Version
+# Enhanced Odoo Installation Script for Ubuntu 22.04 - Complete Version with domain, Nginx, and SSL features
 # Version: 2.1-COMPLETE
-# Author: Enhanced by AI Assistant with domain, Nginx, and SSL features
+# Author: Mahmoud Abel Latif, https://mah007.net
 # Description: Interactive Odoo installation with domain configuration, official Nginx, and SSL certificates
 
 # Script configuration
@@ -986,16 +986,12 @@ EOF
 generate_odoo_config() {
     echo -e "${CYAN}Generating dynamic Odoo configuration...${NC}"
     
-    # Generate a secure admin password
-    local admin_password=$(openssl rand -base64 32)
-    
-    # Create initial configuration file
+    # Create basic configuration file structure
     cat > /etc/odoo/odoo.conf << EOF
 [options]
-; This is the password that allows database operations:
-admin_passwd = $admin_password
-db_host = localhost
-db_port = 5432
+; Basic Odoo configuration
+db_host = False
+db_port = False
 db_user = $OE_USER
 db_password = False
 addons_path = /odoo/odoo/addons
@@ -1007,11 +1003,11 @@ EOF
     execute_simple "chown $OE_USER:$OE_USER /etc/odoo/odoo.conf" "Setting ownership for configuration file"
     execute_simple "chmod 640 /etc/odoo/odoo.conf" "Setting permissions for configuration file"
     
-    # Generate configuration using Odoo's built-in method
+    # Generate configuration using Odoo's built-in method (without master password)
     echo -e "${CYAN}Generating configuration using Odoo...${NC}"
     
-    # Run Odoo configuration generation as the odoo user
-    if execute_simple "su - $OE_USER -s /bin/bash -c 'cd /odoo/odoo && ./odoo-bin -w $admin_password -s -c /etc/odoo/odoo.conf --stop-after-init'" "Generating Odoo configuration"; then
+    # Run Odoo configuration generation as the odoo user without master password
+    if execute_simple "su - $OE_USER -s /bin/bash -c 'cd /odoo/odoo && ./odoo-bin -s -c /etc/odoo/odoo.conf --stop-after-init'" "Generating Odoo configuration"; then
         log_message "INFO" "Odoo configuration generated successfully"
         
         # Add proxy mode configuration if Nginx is installed
@@ -1022,10 +1018,7 @@ EOF
             log_message "INFO" "Added proxy mode configuration for Nginx"
         fi
         
-        # Store admin password for user reference
-        echo "ODOO_ADMIN_PASSWORD=$admin_password" > /root/odoo_admin_password.txt
-        chmod 600 /root/odoo_admin_password.txt
-        log_message "INFO" "Admin password saved to /root/odoo_admin_password.txt"
+        log_message "INFO" "Odoo configuration completed without master password"
         
     else
         log_message "ERROR" "Failed to generate Odoo configuration"
@@ -1234,12 +1227,6 @@ validate_installation() {
 generate_installation_report() {
     local report_file="/tmp/odoo_installation_report_$(date +%Y%m%d_%H%M%S).txt"
     
-    # Read admin password if available
-    local admin_password="Not available"
-    if [ -f "/root/odoo_admin_password.txt" ]; then
-        admin_password=$(grep "ODOO_ADMIN_PASSWORD=" /root/odoo_admin_password.txt | cut -d'=' -f2)
-    fi
-    
     cat > "$report_file" << EOF
 ===============================================================================
                         ENHANCED ODOO INSTALLATION REPORT
@@ -1278,7 +1265,6 @@ fi)
 - Database Management: $([ "$INSTALL_NGINX" = "true" ] && echo "https://$DOMAIN_NAME/web/database/manager" || echo "http://$DOMAIN_NAME:8069/web/database/manager")
 
 SECURITY:
-- Admin Password: $admin_password
 $([ "$INSTALL_NGINX" = "true" ] && echo "- SSL Certificate: $SSL_TYPE")
 $([ "$SSL_TYPE" = "letsencrypt" ] && echo "- Auto-renewal: Enabled via certbot")
 
@@ -1288,11 +1274,10 @@ IMPORTANT FILES:
 $([ "$INSTALL_NGINX" = "true" ] && echo "- Nginx Configuration: /etc/nginx/conf.d/odoo.conf")
 $([ "$SSL_TYPE" = "self-signed" ] && echo "- SSL Certificate: /etc/ssl/nginx/server.crt")
 $([ "$SSL_TYPE" = "letsencrypt" ] && echo "- SSL Certificate: /etc/letsencrypt/live/$DOMAIN_NAME/")
-- Admin Password File: /root/odoo_admin_password.txt
 
 NEXT STEPS:
 1. Access Odoo at $([ "$INSTALL_NGINX" = "true" ] && echo "https://$DOMAIN_NAME" || echo "http://$DOMAIN_NAME:8069")
-2. Create your first database using the admin password above
+2. Create your first database through the web interface
 3. Configure your Odoo instance
 $([ "$SSL_TYPE" = "self-signed" ] && echo "4. Consider replacing self-signed certificate with Let's Encrypt for production")
 5. Set up backup procedures
@@ -1341,14 +1326,6 @@ show_success_message() {
         echo -e "  ${BOLD}${WHITE}https://$DOMAIN_NAME/web/database/manager${NC}"
     else
         echo -e "  ${BOLD}${WHITE}http://$DOMAIN_NAME:8069/web/database/manager${NC}"
-    fi
-    
-    echo
-    echo -e "${CYAN}Important credentials:${NC}"
-    if [ -f "/root/odoo_admin_password.txt" ]; then
-        local admin_password=$(grep "ODOO_ADMIN_PASSWORD=" /root/odoo_admin_password.txt | cut -d'=' -f2)
-        echo -e "  ${YELLOW}Admin Password:${NC} $admin_password"
-        echo -e "  ${YELLOW}Password File:${NC} /root/odoo_admin_password.txt"
     fi
     
     echo
