@@ -575,9 +575,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Documentation**: [GitHub Wiki](https://github.com/yourusername/OdooScript/wiki)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/OdooScript/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/OdooScript/discussions)
+- **Documentation**: [GitHub Wiki](https://github.com/mah007/OdooScript/wiki)
+- **Issues**: [GitHub Issues](https://github.com/mah007/OdooScript/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/mah007/OdooScript/discussions)
 
 ---
 
