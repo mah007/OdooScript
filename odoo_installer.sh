@@ -997,6 +997,7 @@ db_password = False
 addons_path = /odoo/odoo/addons
 logfile = /var/log/odoo/odoo-server.log
 log_level = info
+proxy_mode = True 
 EOF
     
     # Set proper ownership and permissions
@@ -1014,7 +1015,7 @@ EOF
         if [ "$INSTALL_NGINX" = "true" ]; then
             echo "" >> /etc/odoo/odoo.conf
             echo "; Proxy mode configuration" >> /etc/odoo/odoo.conf
-            echo "proxy_mode = True" >> /etc/odoo/odoo.conf
+            #echo "proxy_mode = True" >> /etc/odoo/odoo.conf
             log_message "INFO" "Added proxy mode configuration for Nginx"
         fi
         
