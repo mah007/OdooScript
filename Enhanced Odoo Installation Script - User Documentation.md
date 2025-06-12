@@ -12,13 +12,12 @@
 
 ```bash
 # Download the installer
-wget https://jilllkve.manus.space/enhanced_odoo_installer_complete.sh
-
+wget https://raw.githubusercontent.com/mah007/OdooScript/refs/heads/16.0/odoo_installer.sh
 # Make it executable
-chmod +x enhanced_odoo_installer_complete.sh
+chmod +x odoo_installer.sh
 
 # Run the installer
-sudo ./enhanced_odoo_installer_complete.sh
+sudo ./odoo_installer.sh
 ```
 
 ## 📋 Table of Contents
