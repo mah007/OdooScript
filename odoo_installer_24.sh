@@ -46,6 +46,10 @@ SERVER_IP=""
 # Python virtual environment path for Ubuntu 24.04 compatibility
 PYTHON_VENV_PATH="/odoo/python"
 
+# GitHub credentials for Enterprise edition
+GITHUB_USERNAME=""
+GITHUB_TOKEN=""
+
 # Trap for cleanup on exit
 trap cleanup_on_exit EXIT INT TERM
 
@@ -502,6 +506,169 @@ select_odoo_version() {
     return 0
 }
 
+# Select Odoo edition (Community or Enterprise)
+select_odoo_edition() {
+    while true; do
+        clear
+        display_billboard "Odoo Edition Selection"
+        
+        echo -e "${BOLD}${WHITE}Please select the Odoo edition to install:${NC}"
+        echo
+        echo -e "  ${YELLOW}1)${NC} ${GREEN}Community Edition${NC} ${CYAN}(Free, Open Source)${NC}"
+        echo -e "     ${GRAY}• Full-featured ERP system${NC}"
+        echo -e "     ${GRAY}• No licensing costs${NC}"
+        echo -e "     ${GRAY}• Community support${NC}"
+        echo
+        echo -e "  ${YELLOW}2)${NC} ${PURPLE}Enterprise Edition${NC} ${CYAN}(Paid, Additional Features)${NC}"
+        echo -e "     ${GRAY}• All Community features${NC}"
+        echo -e "     ${GRAY}• Additional enterprise modules${NC}"
+        echo -e "     ${GRAY}• Professional support${NC}"
+        echo -e "     ${GRAY}• Requires GitHub access to Odoo Enterprise${NC}"
+        echo
+        echo -e "  ${YELLOW}3)${NC} Back to Version Selection"
+        echo
+        
+        echo -e -n "${BOLD}${WHITE}Enter your choice [1-3]: ${NC}"
+        read -r choice
+        
+        case "$choice" in
+            1) 
+                IS_ENTERPRISE="False"
+                echo -e "${GREEN}Selected: Community Edition${NC}"
+                log_message "INFO" "User selected Community Edition"
+                return 0
+                ;;
+            2) 
+                IS_ENTERPRISE="True"
+                echo -e "${GREEN}Selected: Enterprise Edition${NC}"
+                log_message "INFO" "User selected Enterprise Edition"
+                
+                # Get GitHub credentials for Enterprise
+                if configure_github_credentials; then
+                    return 0
+                else
+                    echo -e "${RED}GitHub configuration failed. Please try again.${NC}"
+                    sleep 2
+                fi
+                ;;
+            3) 
+                return 1
+                ;;
+            *) 
+                echo -e "${RED}Invalid choice. Please select 1-3.${NC}"
+                sleep 2
+                ;;
+        esac
+    done
+}
+
+# Configure GitHub credentials for Enterprise edition
+configure_github_credentials() {
+    clear
+    display_billboard "GitHub Configuration"
+    
+    echo -e "${BOLD}${WHITE}GitHub Credentials for Odoo Enterprise${NC}"
+    echo
+    echo -e "${CYAN}To download Odoo Enterprise, you need:${NC}"
+    echo -e "  ${YELLOW}•${NC} GitHub username with access to Odoo Enterprise repository"
+    echo -e "  ${YELLOW}•${NC} GitHub Personal Access Token (PAT) with repository access"
+    echo
+    echo -e "${YELLOW}${BOLD}How to create a GitHub Personal Access Token:${NC}"
+    echo -e "  ${GRAY}1. Go to GitHub.com → Settings → Developer settings → Personal access tokens${NC}"
+    echo -e "  ${GRAY}2. Click 'Generate new token (classic)'${NC}"
+    echo -e "  ${GRAY}3. Select 'repo' scope for repository access${NC}"
+    echo -e "  ${GRAY}4. Copy the generated token${NC}"
+    echo
+    
+    # Get GitHub username
+    while true; do
+        echo -e -n "${BOLD}${WHITE}Enter your GitHub username: ${NC}"
+        read -r GITHUB_USERNAME
+        
+        if [ -z "$GITHUB_USERNAME" ]; then
+            echo -e "${RED}GitHub username cannot be empty. Please try again.${NC}"
+            continue
+        fi
+        
+        # Validate username format (basic validation)
+        if [[ ! "$GITHUB_USERNAME" =~ ^[a-zA-Z0-9]([a-zA-Z0-9]|-)*[a-zA-Z0-9]$ ]]; then
+            echo -e "${RED}Invalid GitHub username format. Please try again.${NC}"
+            continue
+        fi
+        
+        break
+    done
+    
+    # Get GitHub token
+    while true; do
+        echo -e -n "${BOLD}${WHITE}Enter your GitHub Personal Access Token: ${NC}"
+        read -rs GITHUB_TOKEN  # -s for silent input (hidden)
+        echo
+        
+        if [ -z "$GITHUB_TOKEN" ]; then
+            echo -e "${RED}GitHub token cannot be empty. Please try again.${NC}"
+            continue
+        fi
+        
+        # Basic token format validation (GitHub tokens start with ghp_, gho_, ghu_, ghs_, or ghr_)
+        if [[ ! "$GITHUB_TOKEN" =~ ^gh[pous]_[a-zA-Z0-9]{36}$ ]] && [[ ! "$GITHUB_TOKEN" =~ ^ghr_[a-zA-Z0-9]{76}$ ]]; then
+            echo -e "${YELLOW}Warning: Token format doesn't match expected GitHub PAT format.${NC}"
+            echo -e -n "${BOLD}${WHITE}Continue anyway? [y/N]: ${NC}"
+            read -r confirm
+            if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+                continue
+            fi
+        fi
+        
+        break
+    done
+    
+    # Test GitHub credentials
+    echo
+    echo -e "${CYAN}Testing GitHub credentials...${NC}"
+    
+    # Test access to Odoo Enterprise repository
+    local test_url="https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/odoo/enterprise.git"
+    
+    if git ls-remote --heads "$test_url" &>/dev/null; then
+        echo -e "${GREEN}✓ GitHub credentials verified successfully!${NC}"
+        echo -e "${GREEN}✓ Access to Odoo Enterprise repository confirmed${NC}"
+        log_message "INFO" "GitHub credentials verified for user: $GITHUB_USERNAME"
+        
+        # Confirm the configuration
+        echo
+        echo -e "${BOLD}${WHITE}GitHub Configuration Summary:${NC}"
+        echo -e "  ${CYAN}Username:${NC} $GITHUB_USERNAME"
+        echo -e "  ${CYAN}Token:${NC} ${GITHUB_TOKEN:0:7}...${GITHUB_TOKEN: -4} ${GRAY}(masked)${NC}"
+        echo -e "  ${CYAN}Repository:${NC} odoo/enterprise"
+        echo
+        
+        echo -e -n "${BOLD}${WHITE}Confirm this configuration? [Y/n]: ${NC}"
+        read -r confirm
+        if [[ "$confirm" =~ ^[Nn]$ ]]; then
+            return 1
+        fi
+        
+        return 0
+    else
+        echo -e "${RED}✗ Failed to access Odoo Enterprise repository${NC}"
+        echo -e "${YELLOW}This could be due to:${NC}"
+        echo -e "  ${GRAY}• Invalid username or token${NC}"
+        echo -e "  ${GRAY}• Insufficient repository permissions${NC}"
+        echo -e "  ${GRAY}• No access to Odoo Enterprise repository${NC}"
+        echo -e "  ${GRAY}• Network connectivity issues${NC}"
+        echo
+        
+        echo -e -n "${BOLD}${WHITE}Try again? [Y/n]: ${NC}"
+        read -r retry
+        if [[ "$retry" =~ ^[Nn]$ ]]; then
+            return 1
+        fi
+        
+        return 1
+    fi
+}
+
 # Installation confirmation
 confirm_installation() {
     clear
@@ -518,6 +685,10 @@ confirm_installation() {
     echo -e "  ${CYAN}Install Webmin:${NC} $INSTALL_WEBMIN"
     echo -e "  ${CYAN}Install wkhtmltopdf:${NC} $INSTALL_WKHTMLTOPDF"
     echo -e "  ${CYAN}Enterprise Features:${NC} $IS_ENTERPRISE"
+    if [ "$IS_ENTERPRISE" = "True" ]; then
+        echo -e "  ${CYAN}GitHub Username:${NC} $GITHUB_USERNAME"
+        echo -e "  ${CYAN}GitHub Token:${NC} ${GITHUB_TOKEN:0:7}...${GITHUB_TOKEN: -4} ${GRAY}(masked)${NC}"
+    fi
     echo -e "  ${CYAN}Python Virtual Env:${NC} $PYTHON_VENV_PATH"
     echo -e "  ${CYAN}Log File:${NC} $LOG_FILE"
     echo
@@ -775,9 +946,32 @@ step_odoo_installation() {
     
     # Clone Odoo repository
     cd /odoo || exit 1
-    if ! execute_simple "git clone --depth 1 --branch $OE_BRANCH https://www.github.com/odoo/odoo" "Cloning Odoo repository"; then
-        log_message "ERROR" "Failed to clone Odoo repository"
+    
+    # Clone Community repository
+    if ! execute_simple "git clone --depth 1 --branch $OE_BRANCH https://www.github.com/odoo/odoo" "Cloning Odoo Community repository"; then
+        log_message "ERROR" "Failed to clone Odoo Community repository"
         return 1
+    fi
+    
+    # Clone Enterprise repository if selected
+    if [ "$IS_ENTERPRISE" = "True" ]; then
+        echo -e "${CYAN}Cloning Odoo Enterprise repository...${NC}"
+        local enterprise_url="https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/odoo/enterprise.git"
+        
+        if ! execute_simple "git clone --depth 1 --branch $OE_BRANCH $enterprise_url" "Cloning Odoo Enterprise repository"; then
+            log_message "ERROR" "Failed to clone Odoo Enterprise repository"
+            echo -e "${RED}Enterprise repository clone failed. This could be due to:${NC}"
+            echo -e "  ${GRAY}• Invalid GitHub credentials${NC}"
+            echo -e "  ${GRAY}• No access to Odoo Enterprise repository${NC}"
+            echo -e "  ${GRAY}• Network connectivity issues${NC}"
+            echo -e "  ${GRAY}• Branch $OE_BRANCH not available in Enterprise${NC}"
+            echo
+            echo -e "${YELLOW}Continuing with Community edition only...${NC}"
+            IS_ENTERPRISE="False"
+            log_message "WARNING" "Falling back to Community edition due to Enterprise clone failure"
+        else
+            log_message "INFO" "Odoo Enterprise repository cloned successfully"
+        fi
     fi
     
     # Set ownership for Odoo directory
@@ -870,6 +1064,13 @@ EOF
 
 # Generate Odoo configuration
 generate_odoo_config() {
+    # Determine addons path based on edition
+    local addons_path="/odoo/odoo/addons"
+    if [ "$IS_ENTERPRISE" = "True" ] && [ -d "/odoo/enterprise" ]; then
+        addons_path="/odoo/odoo/addons,/odoo/enterprise"
+        log_message "INFO" "Enterprise addons path added to configuration"
+    fi
+    
     cat > /etc/odoo/odoo.conf << EOF
 [options]
 ; This is the password that allows database operations:
@@ -878,9 +1079,10 @@ db_host = False
 db_port = False
 db_user = $OE_USER
 db_password = False
-addons_path = /odoo/odoo/addons
+addons_path = $addons_path
 logfile = /var/log/odoo/odoo-server.log
 log_level = info
+proxy_mode = True 
 EOF
     
     # Set proper ownership and permissions
@@ -1126,13 +1328,7 @@ server {
     gzip_proxied expired no-cache no-store private auth;
     gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss;
     gzip_disable "MSIE [1-6]\.\";    
-    # Static files caching
-    location ~* /web/static/ {
-        proxy_cache_valid 200 90m;
-        proxy_buffering on;
-        expires 864000;
-        proxy_pass http://odoo;
-    }
+
 }
 EOF
     
@@ -1608,16 +1804,22 @@ if ! select_odoo_version; then
     exit 0
 fi
 
-# Step 2: Configure domain
+# Step 2: Select Odoo edition (Community or Enterprise)
+if ! select_odoo_edition; then
+    echo -e "${YELLOW}Installation cancelled by user.${NC}"
+    exit 0
+fi
+
+# Step 3: Configure domain
 configure_domain
 
-# Step 3: Configure Nginx
+# Step 4: Configure Nginx
 configure_nginx
 
-# Step 4: Configure Webmin
+# Step 5: Configure Webmin
 configure_webmin
 
-# Step 5: Confirm installation
+# Step 6: Confirm installation
 if ! confirm_installation; then
     echo -e "${YELLOW}Installation cancelled by user.${NC}"
     exit 0
