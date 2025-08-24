@@ -920,8 +920,8 @@ install_official_nginx() {
     
     # Add official Nginx repository
     execute_simple "curl -fsSL https://nginx.org/keys/nginx_signing.key | apt-key add -" "Adding Nginx signing key"
-    execute_simple "echo 'deb https://nginx.org/packages/ubuntu/ noble nginx' > /etc/apt/sources.list.d/nginx.list" "Adding Nginx repository"
-    execute_simple "echo 'deb-src https://nginx.org/packages/ubuntu/ noble nginx' >> /etc/apt/sources.list.d/nginx.list" "Adding Nginx source repository"
+    execute_simple "echo 'deb https://nginx.org/packages/ubuntu/ jammy nginx' > /etc/apt/sources.list.d/nginx.list" "Adding Nginx repository"
+    execute_simple "echo 'deb-src https://nginx.org/packages/ubuntu/ jammy nginx' >> /etc/apt/sources.list.d/nginx.list" "Adding Nginx source repository"
     
     # Set repository priority
     cat > /etc/apt/preferences.d/99nginx << EOF
@@ -1055,6 +1055,11 @@ upstream odoochat {
     server 127.0.0.1:8072;
 }
 
+map \$http_upgrade \$connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
 # HTTP to HTTPS redirect
 server {
     listen 80;
@@ -1064,7 +1069,8 @@ server {
 
 # HTTPS server
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     server_name $DOMAIN_NAME;
     
     # SSL configuration
@@ -1094,9 +1100,17 @@ server {
     access_log /var/log/nginx/odoo.access.log;
     error_log /var/log/nginx/odoo.error.log;
     
-    # Handle longpoll requests
-    location /longpolling {
+    # Handle websocket requests
+    location /websocket {
         proxy_pass http://odoochat;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection \$connection_upgrade;
+        proxy_set_header X-Forwarded-Host \$http_host;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header X-Real-IP \$remote_addr;
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains";
+        proxy_cookie_flags session_id samesite=lax secure;
     }
     
     # Handle all other requests
@@ -1109,10 +1123,9 @@ server {
     gzip on;
     gzip_vary on;
     gzip_min_length 1024;
-    gzip_proxied expired no-cache no-store private must-revalidate auth;
+    gzip_proxied expired no-cache no-store private auth;
     gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss;
-    gzip_disable "MSIE [1-6]\.";
-    
+    gzip_disable "MSIE [1-6]\.\";    
     # Static files caching
     location ~* /web/static/ {
         proxy_cache_valid 200 90m;
