@@ -744,6 +744,13 @@ step_odoo_installation() {
         log_message "ERROR" "Failed to clone Odoo repository"
         return 1
     fi
+
+    # Clone OdooEE repository
+    # cd /odoo || exit 1
+    # if ! execute_simple "git clone --depth 1 --branch $OE_BRANCH https://mah007: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@github.com/odoo/enterprise" "Cloning OdooEE repository"; then
+    #     log_message "ERROR" "Failed to clone Odoo repository"
+    #     return 1
+    # fi    
     
     # Set ownership for Odoo directory
     execute_simple "chown -R $OE_USER:$OE_USER /odoo" "Setting ownership for Odoo directory"
