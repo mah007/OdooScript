@@ -2,7 +2,7 @@
 
 # Enhanced Odoo Installation Script for Ubuntu 24.04 - Complete Version with domain, Nginx, SSL, and Webmin
 # Version: 3.0-UBUNTU24-COMPLETE
-# Author: Mahmoud Abel Latif, https://mah007.net (Upgraded by Manus AI)
+# Author: Mahmoud Abel Latif, https://mah007.net 
 # Description: Interactive Odoo installation with domain configuration, official Nginx, SSL certificates, and Webmin
 
 # Script configuration
