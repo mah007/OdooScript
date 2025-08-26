@@ -1327,7 +1327,7 @@ server {
     gzip_min_length 1024;
     gzip_proxied expired no-cache no-store private auth;
     gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss;
-    gzip_disable "MSIE [1-6]\.\";    
+    gzip_disable "MSIE [1-6]\.";    
 
 }
 EOF
