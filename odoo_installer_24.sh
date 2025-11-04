@@ -479,12 +479,13 @@ select_odoo_version() {
         echo -e "  ${YELLOW}1)${NC} Odoo 14.0 ${CYAN}(LTS - Long Term Support)${NC}"
         echo -e "  ${YELLOW}2)${NC} Odoo 15.0 ${CYAN}(Stable)${NC}"
         echo -e "  ${YELLOW}3)${NC} Odoo 16.0 ${CYAN}(Stable)${NC}"
-        echo -e "  ${YELLOW}4)${NC} Odoo 17.0 ${CYAN}(Latest Stable)${NC}"
-        echo -e "  ${YELLOW}5)${NC} Odoo 18.0 ${CYAN}(Latest - May have issues)${NC}"
-        echo -e "  ${YELLOW}6)${NC} Back to Main Menu"
+        echo -e "  ${YELLOW}4)${NC} Odoo 17.0 ${CYAN}(Stable)${NC}"
+        echo -e "  ${YELLOW}5)${NC} Odoo 18.0 ${CYAN}(Latest)${NC}"
+        echo -e "  ${YELLOW}6)${NC} Odoo 19.0 ${CYAN}(Latest - May have issues)${NC}"
+        echo -e "  ${YELLOW}7)${NC} Back to Main Menu"
         echo
         
-        echo -e -n "${BOLD}${WHITE}Enter your choice [1-6]: ${NC}"
+        echo -e -n "${BOLD}${WHITE}Enter your choice [1-7]: ${NC}"
         read -r choice
         
         case "$choice" in
@@ -493,7 +494,8 @@ select_odoo_version() {
             3) OE_BRANCH="16.0"; break;;
             4) OE_BRANCH="17.0"; break;;
             5) OE_BRANCH="18.0"; break;;
-            6) return 1;;
+            6) OE_BRANCH="19.0"; break;;
+            7) return 1;;
             *) 
                 echo -e "${RED}Invalid choice. Please select 1-6.${NC}"
                 sleep 2
