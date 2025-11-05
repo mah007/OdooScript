@@ -228,7 +228,7 @@ check_system_requirements() {
 # Validate Odoo version selection
 validate_odoo_version() {
     case "$OE_BRANCH" in
-        "14.0"|"15.0"|"16.0"|"17.0"|"18.0")
+        "14.0"|"15.0"|"16.0"|"17.0"|"18.0"|"19.0")
             return 0
             ;;
         *)
