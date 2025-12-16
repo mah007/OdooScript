@@ -851,7 +851,7 @@ step_dependencies_installation() {
         "libpq-dev" "libtiff5-dev" "libjpeg8-dev" "libopenjp2-7-dev" 
         "liblcms2-dev" "libwebp-dev" "libharfbuzz-dev" "libfribidi-dev" 
         "libxcb1-dev" "libwww-perl" "gsfonts" "libcairo2-dev" 
-        "python3-cairo" "ca-certificates" "gnupg"
+        "python3-cairo" "ca-certificates" "gnupg" "postgresql-16-pgvector"
     )
     
     echo -e "${CYAN}Installing system packages (some may fail, this is normal)...${NC}"
