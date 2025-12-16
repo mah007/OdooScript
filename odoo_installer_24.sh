@@ -1355,7 +1355,7 @@ step_webmin_installation() {
         fi
         
         # Run the setup script
-        if ! execute_simple "bash /tmp/webmin-setup-repo.sh" "Setting up Webmin repository"; then
+        if ! execute_simple "bash yes | /tmp/webmin-setup-repo.sh " "Setting up Webmin repository"; then
             log_message "ERROR" "Failed to setup Webmin repository"
             return 1
         fi
