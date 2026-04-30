@@ -2,7 +2,7 @@
 
 # Enhanced Odoo Installation Script for Ubuntu 24.04 - Complete Version with domain, Nginx, SSL, and Webmin
 # Version: 3.0-UBUNTU24-COMPLETE
-# Author: Mahmoud Abel Latif, https://mah007.net 
+# Author: Mahmoud Abdel Latif, https://mah007.net 
 # Description: Interactive Odoo installation with domain configuration, official Nginx, SSL certificates, and Webmin
 
 # Script configuration
@@ -19,8 +19,10 @@ BLUE='\033[0;34m'
 PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
 WHITE='\033[1;37m'
+GRAY='\033[0;90m'
 NC='\033[0m' # No Color
 BOLD='\033[1m'
+DIM='\033[2m'
 
 # Progress tracking
 TOTAL_STEPS=9
@@ -52,6 +54,156 @@ GITHUB_TOKEN=""
 
 # Trap for cleanup on exit
 trap cleanup_on_exit EXIT INT TERM
+
+#==============================================================================
+# ANIMATED INTRO
+#==============================================================================
+
+show_animated_intro() {
+    clear
+    
+    # Gradient color arrays
+    local colors=("$RED" "$YELLOW" "$GREEN" "$CYAN" "$BLUE" "$PURPLE")
+    
+    # Hide cursor during animation
+    tput civis 2>/dev/null
+    
+    # ── Phase 1: Sliding border lines ──
+    local width=80
+    for ((i=0; i<width; i++)); do
+        printf "\r${CYAN}"
+        for ((j=0; j<=i; j++)); do
+            printf "━"
+        done
+        sleep 0.005
+    done
+    echo -e "${NC}"
+    
+    # ── Phase 2: Odoo ASCII logo typed line by line ──
+    local logo_lines=(
+        "${RED}  ██████╗ ${GREEN}██████╗  ${YELLOW}██████╗  ${BLUE}██████╗ "
+        "${RED} ██╔═══██╗${GREEN}██╔══██╗ ${YELLOW}██╔═══██╗${BLUE}██╔═══██╗"
+        "${RED} ██║   ██║${GREEN}██║  ██║ ${YELLOW}██║   ██║${BLUE}██║   ██║"
+        "${RED} ██║   ██║${GREEN}██║  ██║ ${YELLOW}██║   ██║${BLUE}██║   ██║"
+        "${RED} ╚██████╔╝${GREEN}██████╔╝ ${YELLOW}╚██████╔╝${BLUE}╚██████╔╝"
+        "${RED}  ╚═════╝ ${GREEN}╚═════╝  ${YELLOW} ╚═════╝ ${BLUE} ╚═════╝ "
+    )
+    
+    echo
+    for line in "${logo_lines[@]}"; do
+        printf "%15s" ""
+        echo -e "$line${NC}"
+        sleep 0.12
+    done
+    
+    sleep 0.3
+    
+    # ── Phase 3: Typewriter effect for subtitle ──
+    echo
+    local subtitle="U L T I M A T E   I N S T A L L E R"
+    printf "%22s" ""
+    for ((i=0; i<${#subtitle}; i++)); do
+        local ci=$((i % 6))
+        printf "${colors[$ci]}${BOLD}%s${NC}" "${subtitle:$i:1}"
+        sleep 0.03
+    done
+    echo
+    
+    # ── Phase 4: Version badge ──
+    sleep 0.3
+    printf "%27s" ""
+    echo -e "${DIM}${WHITE}── v${SCRIPT_VERSION} for Ubuntu 24.04 ──${NC}"
+    
+    sleep 0.3
+    
+    # ── Phase 5: Animated separator ──
+    echo
+    printf "%10s" ""
+    for ((i=0; i<60; i++)); do
+        local ci=$((i % 6))
+        printf "${colors[$ci]}─${NC}"
+        sleep 0.008
+    done
+    echo
+    
+    # ── Phase 6: Author credit with glow effect ──
+    sleep 0.3
+    
+    local author_text="Mahmoud Abdel Latif"
+    local credit_prefix="Created by : "
+    
+    # Dim pass
+    printf "%22s" ""
+    echo -e "${DIM}${WHITE}${credit_prefix}${author_text}${NC}"
+    sleep 0.2
+    
+    # Overwrite with normal
+    printf "\033[1A"
+    printf "%22s" ""
+    echo -e "${WHITE}${credit_prefix}${BOLD}${CYAN}${author_text}${NC}"
+    sleep 0.2
+    
+    # Overwrite with glowing bold
+    printf "\033[1A"
+    printf "%22s" ""
+    echo -e "${WHITE}${credit_prefix}${BOLD}${GREEN}✦ ${CYAN}${author_text}${GREEN} ✦${NC}"
+    
+    sleep 0.2
+    printf "%27s" ""
+    echo -e "${DIM}${WHITE}https://mah007.net${NC}"
+    
+    # ── Phase 7: Animated feature list ──
+    sleep 0.4
+    echo
+    printf "%10s" ""
+    for ((i=0; i<60; i++)); do
+        local ci=$((i % 6))
+        printf "${colors[$ci]}─${NC}"
+        sleep 0.005
+    done
+    echo
+    echo
+    
+    local features=(
+        "${GREEN}◆${NC} ${WHITE}Odoo 14.0 → 19.0 ${DIM}(Community & Enterprise)${NC}"
+        "${GREEN}◆${NC} ${WHITE}Python Virtual Environment ${DIM}(Ubuntu 24.04 safe)${NC}"
+        "${GREEN}◆${NC} ${WHITE}PostgreSQL 16 ${DIM}(Latest stable)${NC}"
+        "${GREEN}◆${NC} ${WHITE}Nginx + SSL ${DIM}(Let's Encrypt / Self-signed)${NC}"
+        "${GREEN}◆${NC} ${WHITE}Webmin ${DIM}(Web-based administration)${NC}"
+        "${GREEN}◆${NC} ${WHITE}Auto Validation ${DIM}(Post-install health checks)${NC}"
+    )
+    
+    for feature in "${features[@]}"; do
+        printf "%15s" ""
+        echo -e "$feature"
+        sleep 0.15
+    done
+    
+    # ── Phase 8: Closing border with sparkle ──
+    echo
+    printf "%10s" ""
+    for ((i=0; i<60; i++)); do
+        local ci=$((i % 6))
+        printf "${colors[$ci]}━${NC}"
+        sleep 0.005
+    done
+    echo
+    echo
+    
+    # ── Phase 9: Ready prompt ──
+    printf "%20s" ""
+    echo -e "${BOLD}${YELLOW}⚡ Ready to install your Odoo server ⚡${NC}"
+    echo
+    
+    # Show cursor again
+    tput cnorm 2>/dev/null
+    
+    sleep 1
+    
+    printf "%25s" ""
+    echo -e -n "${DIM}${WHITE}Press Enter to continue...${NC}"
+    read -r
+}
 
 #==============================================================================
 # UTILITY FUNCTIONS
@@ -149,6 +301,8 @@ show_step_header() {
 # Cleanup function
 cleanup_on_exit() {
     local exit_code=$?
+    # Restore cursor visibility
+    tput cnorm 2>/dev/null
     if [ $exit_code -ne 0 ]; then
         echo
         echo -e "${RED}${BOLD}Installation interrupted or failed!${NC}"
@@ -159,11 +313,9 @@ cleanup_on_exit() {
 
 # Get server IP address
 get_server_ip() {
-    # Try multiple methods to get the server IP
     SERVER_IP=$(curl -s ifconfig.me 2>/dev/null || curl -s ipinfo.io/ip 2>/dev/null || curl -s icanhazip.com 2>/dev/null)
     
     if [ -z "$SERVER_IP" ]; then
-        # Fallback to local IP
         SERVER_IP=$(hostname -I | awk '{print $1}')
     fi
     
@@ -239,7 +391,6 @@ validate_odoo_version() {
 }
 
 
-
 #==============================================================================
 # DOMAIN AND SSL CONFIGURATION
 #==============================================================================
@@ -311,7 +462,6 @@ configure_domain() {
 verify_domain_dns() {
     echo -e "${CYAN}Verifying domain DNS configuration...${NC}"
     
-    # Check if domain resolves to this server
     local domain_ip=$(dig +short "$DOMAIN_NAME" 2>/dev/null | tail -n1)
     
     if [ -n "$domain_ip" ]; then
@@ -497,7 +647,7 @@ select_odoo_version() {
             6) OE_BRANCH="19.0"; break;;
             7) return 1;;
             *) 
-                echo -e "${RED}Invalid choice. Please select 1-6.${NC}"
+                echo -e "${RED}Invalid choice. Please select 1-7.${NC}"
                 sleep 2
                 ;;
         esac
@@ -610,16 +760,6 @@ configure_github_credentials() {
         if [ -z "$GITHUB_TOKEN" ]; then
             echo -e "${RED}GitHub token cannot be empty. Please try again.${NC}"
             continue
-        fi
-        
-        # Basic token format validation (GitHub tokens start with ghp_, gho_, ghu_, ghs_, or ghr_)
-        if [[ ! "$GITHUB_TOKEN" =~ ^gh[pous]_[a-zA-Z0-9]{36}$ ]] && [[ ! "$GITHUB_TOKEN" =~ ^ghr_[a-zA-Z0-9]{76}$ ]]; then
-            echo -e "${YELLOW}Warning: Token format doesn't match expected GitHub PAT format.${NC}"
-            echo -e -n "${BOLD}${WHITE}Continue anyway? [y/N]: ${NC}"
-            read -r confirm
-            if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-                continue
-            fi
         fi
         
         break
@@ -781,14 +921,10 @@ step_system_preparation() {
 step_database_setup() {
     show_step_header 3 "Database Setup" "Installing and configuring PostgreSQL database"
     
-    # Add PostgreSQL repository
-    execute_simple "sh -c 'echo \"deb [arch=amd64] http://apt.postgresql.org/pub/repos/apt noble-pgdg main\" > /etc/apt/sources.list.d/pgdg.list'" "Adding PostgreSQL repository"
-    
-    # Add PostgreSQL signing key with error handling
-    if ! execute_simple "wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -" "Adding PostgreSQL signing key"; then
-        log_message "WARNING" "Failed to add PostgreSQL key via apt-key, trying alternative method"
-        execute_simple "wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /etc/apt/trusted.gpg.d/postgresql.gpg > /dev/null" "Adding PostgreSQL signing key (alternative method)"
-    fi
+    # Add PostgreSQL repository using modern signed-by method (apt-key is deprecated in 24.04)
+    execute_simple "mkdir -p /etc/apt/keyrings" "Creating keyrings directory"
+    execute_simple "wget --quiet -O /etc/apt/keyrings/postgresql.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc" "Downloading PostgreSQL signing key"
+    execute_simple "echo 'deb [signed-by=/etc/apt/keyrings/postgresql.asc] http://apt.postgresql.org/pub/repos/apt noble-pgdg main' > /etc/apt/sources.list.d/pgdg.list" "Adding PostgreSQL repository"
     
     # Update package lists
     execute_simple "apt-get update" "Updating package lists with PostgreSQL repository"
@@ -809,7 +945,7 @@ step_database_setup() {
     log_message "INFO" "Database setup completed successfully"
 }
 
-# Step 4: Python Environment Setup (NEW for Ubuntu 24.04)
+# Step 4: Python Environment Setup (for Ubuntu 24.04)
 step_python_environment_setup() {
     show_step_header 4 "Python Environment Setup" "Creating isolated Python environment for Odoo"
     
@@ -947,7 +1083,7 @@ step_odoo_installation() {
     show_step_header 7 "Odoo Installation" "Downloading and configuring Odoo source code"
     
     # Clone Odoo repository
-    cd /odoo || exit 1
+    cd /odoo || { log_message "ERROR" "Failed to change directory to /odoo"; return 1; }
     
     # Clone Community repository
     if ! execute_simple "git clone --depth 1 --branch $OE_BRANCH https://www.github.com/odoo/odoo" "Cloning Odoo Community repository"; then
@@ -970,6 +1106,8 @@ step_odoo_installation() {
             echo
             echo -e "${YELLOW}Continuing with Community edition only...${NC}"
             IS_ENTERPRISE="False"
+            # Clean up partial clone if any
+            rm -rf /odoo/enterprise 2>/dev/null
             log_message "WARNING" "Falling back to Community edition due to Enterprise clone failure"
         else
             log_message "INFO" "Odoo Enterprise repository cloned successfully"
@@ -1022,13 +1160,27 @@ step_service_configuration() {
         create_nginx_odoo_config
     fi
     
+    # Configure firewall rules
+    configure_firewall
+    
     # Start Odoo service
     if execute_simple "systemctl start odoo" "Starting Odoo service"; then
-        sleep 5
-        if systemctl is-active --quiet odoo; then
-            log_message "INFO" "Odoo service started successfully"
-        else
-            log_message "ERROR" "Odoo service failed to start"
+        # Poll for Odoo to start instead of fixed sleep
+        echo -e "${CYAN}Waiting for Odoo to start...${NC}"
+        local max_wait=30
+        local waited=0
+        while [ $waited -lt $max_wait ]; do
+            if systemctl is-active --quiet odoo; then
+                log_message "INFO" "Odoo service started successfully after ${waited}s"
+                echo -e "${GREEN}✓${NC} Odoo service is running"
+                break
+            fi
+            sleep 2
+            waited=$((waited + 2))
+        done
+        
+        if [ $waited -ge $max_wait ]; then
+            log_message "ERROR" "Odoo service failed to start within ${max_wait}s"
             execute_simple "systemctl status odoo" "Checking Odoo service status"
         fi
     fi
@@ -1073,6 +1225,12 @@ generate_odoo_config() {
         log_message "INFO" "Enterprise addons path added to configuration"
     fi
     
+    # Determine proxy mode based on Nginx
+    local proxy_mode="False"
+    if [ "$INSTALL_NGINX" = "true" ]; then
+        proxy_mode="True"
+    fi
+    
     cat > /etc/odoo/odoo.conf << EOF
 [options]
 ; This is the password that allows database operations:
@@ -1084,30 +1242,24 @@ db_password = False
 addons_path = $addons_path
 logfile = /var/log/odoo/odoo-server.log
 log_level = info
-proxy_mode = True 
+proxy_mode = $proxy_mode
 EOF
     
     # Set proper ownership and permissions
     execute_simple "chown $OE_USER:$OE_USER /etc/odoo/odoo.conf" "Setting ownership for configuration file"
     execute_simple "chmod 640 /etc/odoo/odoo.conf" "Setting permissions for configuration file"
     
-    # Generate configuration using Odoo's built-in method (without master password)
-    echo -e "${CYAN}Generating configuration using Odoo...${NC}"
+    # Generate full configuration using Odoo's built-in method
+    echo -e "${CYAN}Generating full configuration using Odoo...${NC}"
     
-    # Run Odoo configuration generation as the odoo user without master password
     if execute_simple "su - $OE_USER -s /bin/bash -c 'cd /odoo/odoo && $PYTHON_VENV_PATH/bin/python ./odoo-bin -s -c /etc/odoo/odoo.conf --stop-after-init'" "Generating Odoo configuration"; then
         log_message "INFO" "Odoo configuration generated successfully"
         
-        # Add proxy mode configuration if Nginx is installed
-        if [ "$INSTALL_NGINX" = "true" ]; then
-            echo "" >> /etc/odoo/odoo.conf
-            echo "; Proxy mode configuration" >> /etc/odoo/odoo.conf
-            #echo "proxy_mode = True" >> /etc/odoo/odoo.conf
-            log_message "INFO" "Added proxy mode configuration for Nginx"
-        fi
+        # Re-apply our custom settings since odoo-bin -s overwrites the config
+        execute_simple "sed -i 's|^addons_path.*|addons_path = $addons_path|' /etc/odoo/odoo.conf" "Re-applying addons path"
+        execute_simple "sed -i 's|^proxy_mode.*|proxy_mode = $proxy_mode|' /etc/odoo/odoo.conf" "Re-applying proxy mode"
         
-        log_message "INFO" "Odoo configuration completed without master password"
-        
+        log_message "INFO" "Odoo configuration completed"
     else
         log_message "ERROR" "Failed to generate Odoo configuration"
         return 1
@@ -1122,10 +1274,11 @@ install_official_nginx() {
     execute_simple "apt-get remove -y nginx nginx-common nginx-core" "Removing existing Nginx packages"
     execute_simple "apt-get autoremove -y" "Cleaning up unused packages"
     
-    # Add official Nginx repository
-    execute_simple "curl -fsSL https://nginx.org/keys/nginx_signing.key | apt-key add -" "Adding Nginx signing key"
-    execute_simple "echo 'deb https://nginx.org/packages/ubuntu/ jammy nginx' > /etc/apt/sources.list.d/nginx.list" "Adding Nginx repository"
-    execute_simple "echo 'deb-src https://nginx.org/packages/ubuntu/ jammy nginx' >> /etc/apt/sources.list.d/nginx.list" "Adding Nginx source repository"
+    # Add official Nginx repository using modern signed-by method (apt-key is deprecated in 24.04)
+    execute_simple "mkdir -p /etc/apt/keyrings" "Creating keyrings directory"
+    execute_simple "curl -fsSL https://nginx.org/keys/nginx_signing.key | gpg --dearmor -o /etc/apt/keyrings/nginx.gpg" "Adding Nginx signing key"
+    execute_simple "echo 'deb [signed-by=/etc/apt/keyrings/nginx.gpg] https://nginx.org/packages/ubuntu/ noble nginx' > /etc/apt/sources.list.d/nginx.list" "Adding Nginx repository"
+    execute_simple "echo 'deb-src [signed-by=/etc/apt/keyrings/nginx.gpg] https://nginx.org/packages/ubuntu/ noble nginx' >> /etc/apt/sources.list.d/nginx.list" "Adding Nginx source repository"
     
     # Set repository priority
     cat > /etc/apt/preferences.d/99nginx << EOF
@@ -1236,7 +1389,7 @@ EOF
     log_message "INFO" "Created temporary Nginx configuration for SSL certificate verification"
 }
 
-# Create Nginx configuration for Odoo
+# Create Nginx configuration for Odoo (official Odoo config)
 create_nginx_odoo_config() {
     local ssl_cert_path=""
     local ssl_key_path=""
@@ -1252,85 +1405,74 @@ create_nginx_odoo_config() {
     cat > /etc/nginx/conf.d/odoo.conf << EOF
 # Odoo server configuration
 upstream odoo {
-    server 127.0.0.1:8069;
+  server 127.0.0.1:8069;
 }
 
 upstream odoochat {
-    server 127.0.0.1:8072;
+  server 127.0.0.1:8072;
 }
 
 map \$http_upgrade \$connection_upgrade {
-    default upgrade;
-    ''      close;
+  default upgrade;
+  ''      close;
 }
 
-# HTTP to HTTPS redirect
+# http -> https
 server {
-    listen 80;
-    server_name $DOMAIN_NAME;
-    return 301 https://\$server_name\$request_uri;
+  listen 80;
+  server_name $DOMAIN_NAME;
+  rewrite ^(.*) https://\$host\$1 permanent;
 }
 
-# HTTPS server
 server {
-    listen 443 ssl;
-    http2 on;
-    server_name $DOMAIN_NAME;
-    
-    # SSL configuration
-    ssl_certificate $ssl_cert_path;
-    ssl_certificate_key $ssl_key_path;
-    ssl_session_timeout 30m;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4;
-    ssl_prefer_server_ciphers on;
-    
-    # Security headers
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains";
-    add_header X-Content-Type-Options nosniff;
-    add_header X-Frame-Options DENY;
-    add_header X-XSS-Protection "1; mode=block";
-    
-    # Proxy settings
-    proxy_read_timeout 720s;
-    proxy_connect_timeout 720s;
-    proxy_send_timeout 720s;
-    proxy_set_header X-Forwarded-Host \$host;
+  listen 443 ssl;
+  server_name $DOMAIN_NAME;
+  proxy_read_timeout 720s;
+  proxy_connect_timeout 720s;
+  proxy_send_timeout 720s;
+
+  # SSL parameters
+  ssl_certificate $ssl_cert_path;
+  ssl_certificate_key $ssl_key_path;
+  ssl_session_timeout 30m;
+  ssl_protocols TLSv1.2;
+  ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+  ssl_prefer_server_ciphers off;
+
+  # log
+  access_log /var/log/nginx/odoo.access.log;
+  error_log /var/log/nginx/odoo.error.log;
+
+  # Redirect websocket requests to odoo gevent port
+  location /websocket {
+    proxy_pass http://odoochat;
+    proxy_set_header Upgrade \$http_upgrade;
+    proxy_set_header Connection \$connection_upgrade;
+    proxy_set_header X-Forwarded-Host \$http_host;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto \$scheme;
     proxy_set_header X-Real-IP \$remote_addr;
-    
-    # Log files
-    access_log /var/log/nginx/odoo.access.log;
-    error_log /var/log/nginx/odoo.error.log;
-    
-    # Handle websocket requests
-    location /websocket {
-        proxy_pass http://odoochat;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection \$connection_upgrade;
-        proxy_set_header X-Forwarded-Host \$http_host;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_set_header X-Real-IP \$remote_addr;
-        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains";
-        proxy_cookie_flags session_id samesite=lax secure;
-    }
-    
-    # Handle all other requests
-    location / {
-        proxy_pass http://odoo;
-        proxy_redirect off;
-    }
-    
-    # Gzip compression
-    gzip on;
-    gzip_vary on;
-    gzip_min_length 1024;
-    gzip_proxied expired no-cache no-store private auth;
-    gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss;
-    gzip_disable "MSIE [1-6]\.";    
 
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains";
+    proxy_cookie_flags session_id samesite=lax secure;
+  }
+
+  # Redirect requests to odoo backend server
+  location / {
+    proxy_set_header X-Forwarded-Host \$http_host;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto \$scheme;
+    proxy_set_header X-Real-IP \$remote_addr;
+    proxy_redirect off;
+    proxy_pass http://odoo;
+
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains";
+    proxy_cookie_flags session_id samesite=lax secure;
+  }
+
+  # common gzip
+  gzip_types text/css text/scss text/plain text/xml application/xml application/json application/javascript;
+  gzip on;
 }
 EOF
     
@@ -1341,8 +1483,29 @@ EOF
     log_message "INFO" "Created Nginx configuration for Odoo with SSL"
 }
 
+# Configure firewall rules
+configure_firewall() {
+    echo -e "${CYAN}Configuring firewall rules...${NC}"
+    
+    if command -v ufw &> /dev/null; then
+        if [ "$INSTALL_NGINX" = "true" ]; then
+            execute_simple "ufw allow 80" "Opening HTTP port 80"
+            execute_simple "ufw allow 443" "Opening HTTPS port 443"
+        else
+            execute_simple "ufw allow 8069" "Opening Odoo port 8069"
+        fi
+        
+        if [ "$INSTALL_WEBMIN" = "true" ]; then
+            execute_simple "ufw allow 10000" "Opening Webmin port 10000"
+        fi
+        
+        log_message "INFO" "Firewall rules configured"
+    else
+        log_message "WARNING" "UFW firewall not found, please manually configure firewall rules"
+    fi
+}
 
-# Step 9: Webmin installation (NEW)
+# Step 9: Webmin installation
 step_webmin_installation() {
     show_step_header 9 "Webmin Installation" "Installing and configuring Webmin web-based administration"
     
@@ -1354,8 +1517,8 @@ step_webmin_installation() {
             return 1
         fi
         
-        # Run the setup script
-        if ! execute_simple "bash yes | /tmp/webmin-setup-repo.sh " "Setting up Webmin repository"; then
+        # Run the setup script (fixed: was "bash yes |" instead of "yes | bash")
+        if ! execute_simple "yes | bash /tmp/webmin-setup-repo.sh" "Setting up Webmin repository"; then
             log_message "ERROR" "Failed to setup Webmin repository"
             return 1
         fi
@@ -1375,9 +1538,6 @@ step_webmin_installation() {
             execute_simple "systemctl enable webmin" "Enabling Webmin service"
         fi
         
-        # Configure firewall for Webmin
-        configure_webmin_firewall
-        
         # Configure Webmin SSL if we have certificates
         configure_webmin_ssl
         
@@ -1387,19 +1547,6 @@ step_webmin_installation() {
         log_message "INFO" "Webmin installation completed successfully"
     else
         log_message "INFO" "Webmin installation skipped by user configuration"
-    fi
-}
-
-# Configure firewall for Webmin
-configure_webmin_firewall() {
-    echo -e "${CYAN}Configuring firewall for Webmin...${NC}"
-    
-    # Check if ufw is installed and active
-    if command -v ufw &> /dev/null; then
-        execute_simple "ufw allow 10000" "Opening Webmin port 10000"
-        log_message "INFO" "Webmin port 10000 opened in firewall"
-    else
-        log_message "WARNING" "UFW firewall not found, please manually open port 10000"
     fi
 }
 
@@ -1511,10 +1658,7 @@ validate_installation() {
     
     # Test network connectivity to Odoo
     if systemctl is-active --quiet odoo; then
-        sleep 10  # Give Odoo time to fully start
-        
         if [ "$INSTALL_NGINX" = "true" ]; then
-            # Test HTTPS access
             if curl -k -s "https://$DOMAIN_NAME" > /dev/null; then
                 echo -e "${GREEN}✓${NC} Odoo web interface is accessible via HTTPS"
                 log_message "INFO" "Validation: Odoo HTTPS interface accessible"
@@ -1523,7 +1667,6 @@ validate_installation() {
                 log_message "WARNING" "Validation: Odoo HTTPS interface not immediately accessible"
             fi
         else
-            # Test direct HTTP access
             if curl -s http://localhost:8069 > /dev/null; then
                 echo -e "${GREEN}✓${NC} Odoo web interface is accessible"
                 log_message "INFO" "Validation: Odoo web interface accessible"
@@ -1771,9 +1914,9 @@ log_message "INFO" "Starting $SCRIPT_NAME v$SCRIPT_VERSION"
 log_message "INFO" "System: $(lsb_release -d | cut -f2)"
 log_message "INFO" "User: $(whoami)"
 
-# Show welcome message
+# Show animated intro
+show_animated_intro
 clear
-display_billboard "$SCRIPT_NAME"
 
 echo -e "${BOLD}${WHITE}Welcome to the Enhanced Odoo Installation Script for Ubuntu 24.04!${NC}"
 echo
