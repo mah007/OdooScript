@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Enhanced Odoo Installation Script for Ubuntu 24.04 - Complete Version with domain, Nginx, SSL, and Webmin
-# Version: 3.0-UBUNTU24-COMPLETE
+# Version: 3.1-UBUNTU24-COMPLETE
 # Author: Mahmoud Abdel Latif, https://mah007.net 
 # Description: Interactive Odoo installation with domain configuration, official Nginx, SSL certificates, and Webmin
 
 # Script configuration
-SCRIPT_VERSION="3.0-UBUNTU24-COMPLETE"
+SCRIPT_VERSION="3.1-UBUNTU24-COMPLETE"
 SCRIPT_NAME="Enhanced Odoo Installer with Domain, SSL & Webmin Support for Ubuntu 24.04"
 LOG_FILE="/tmp/odoo_install_$(date +%Y%m%d_%H%M%S).log"
 CONFIG_FILE="/tmp/odoo_install_config.conf"
@@ -17,6 +17,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 PURPLE='\033[0;35m'
+MAGENTA='\033[0;35m'
 CYAN='\033[0;36m'
 WHITE='\033[1;37m'
 GRAY='\033[0;90m'
@@ -56,153 +57,264 @@ GITHUB_TOKEN=""
 trap cleanup_on_exit EXIT INT TERM
 
 #==============================================================================
-# ANIMATED INTRO
+# RETRO INTRO - 8-BIT ATARI/CONTRA INSPIRED
 #==============================================================================
 
-show_animated_intro() {
-    clear
-    
-    # Gradient color arrays
-    local colors=("$RED" "$YELLOW" "$GREEN" "$CYAN" "$BLUE" "$PURPLE")
-    
-    # Hide cursor during animation
-    tput civis 2>/dev/null
-    
-    # ── Phase 1: Sliding border lines ──
+# Cursor helpers
+hide_cursor(){ tput civis 2>/dev/null || true; }
+show_cursor(){ tput cnorm 2>/dev/null || true; }
+
+# Center text helper
+center() {
+    local text="$1"
     local width=80
-    for ((i=0; i<width; i++)); do
-        printf "\r${CYAN}"
-        for ((j=0; j<=i; j++)); do
-            printf "━"
+    local clean
+    clean=$(echo -e "$text" | sed 's/\x1b\[[0-9;]*m//g')
+    local pad=$(( (width - ${#clean}) / 2 ))
+    [ "$pad" -lt 0 ] && pad=0
+    printf "%*s%b\n" "$pad" "" "$text"
+}
+
+sleep_frame(){ sleep "${1:-0.04}"; }
+
+# ── Retro Sound Engine (requires sox: sudo apt install sox libsox-fmt-all) ──
+
+has_sox() {
+    command -v play >/dev/null 2>&1
+}
+
+tone() {
+    local freq="$1"
+    local dur="$2"
+    local vol="${3:-0.18}"
+    if has_sox; then
+        play -q -n synth "$dur" square "$freq" gain -18 vol "$vol" >/dev/null 2>&1 &
+    else
+        printf '\a'
+    fi
+}
+
+noise_hit() {
+    if has_sox; then
+        play -q -n synth 0.06 noise gain -22 vol 0.2 >/dev/null 2>&1 &
+    else
+        printf '\a'
+    fi
+}
+
+contra_inspired_startup() {
+    tone 196 0.07; sleep 0.08
+    tone 262 0.07; sleep 0.08
+    tone 330 0.07; sleep 0.08
+    tone 392 0.10; sleep 0.12
+    noise_hit;     sleep 0.08
+    tone 523 0.12
+}
+
+contra_inspired_action_riff() {
+    local notes=(392 392 523 392 330 392 587 523)
+    for n in "${notes[@]}"; do
+        tone "$n" 0.055 0.16
+        sleep 0.065
+    done
+}
+
+contra_inspired_ok() {
+    tone 784 0.045 0.12; sleep 0.04
+    tone 988 0.055 0.12
+}
+
+contra_inspired_coin() {
+    tone 660 0.07 0.15; sleep 0.07
+    tone 880 0.07 0.15; sleep 0.07
+    tone 1320 0.10 0.15
+}
+
+# ── Visual Engine ──
+
+stars() {
+    clear
+    for row in {1..22}; do
+        local line=""
+        for col in {1..80}; do
+            local r=$((RANDOM % 35))
+            if [ "$r" -eq 1 ]; then
+                line="${line}."
+            elif [ "$r" -eq 2 ]; then
+                line="${line}*"
+            else
+                line="${line} "
+            fi
         done
-        sleep 0.005
+        echo -e "${DIM}${WHITE}${line}${NC}"
     done
+}
+
+laser_lines() {
+    for i in {1..8}; do
+        noise_hit
+        clear
+        printf "\n\n\n"
+        center "${MAGENTA}${BOLD}════════════════════════════════════════${NC}"
+        center "${CYAN}${BOLD}        RETRO DEPLOYMENT SYSTEM        ${NC}"
+        center "${MAGENTA}${BOLD}════════════════════════════════════════${NC}"
+        sleep_frame 0.07
+
+        clear
+        printf "\n\n\n"
+        center "${CYAN}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        center "${YELLOW}${BOLD}        RETRO DEPLOYMENT SYSTEM        ${NC}"
+        center "${CYAN}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        sleep_frame 0.07
+    done
+}
+
+pixel_logo() {
+    echo -e "${GREEN}${BOLD}"
+cat <<'EOF'
+        ░█████╗░██████╗░░█████╗░░█████╗░
+        ██╔══██╗██╔══██╗██╔══██╗██╔══██╗
+        ██║░░██║██║░░██║██║░░██║██║░░██║
+        ██║░░██║██║░░██║██║░░██║██║░░██║
+        ╚█████╔╝██████╔╝╚█████╔╝╚█████╔╝
+        ░╚════╝░╚═════╝░░╚════╝░░╚════╝░
+EOF
     echo -e "${NC}"
-    
-    # ── Phase 2: Odoo ASCII logo typed line by line ──
-    local logo_lines=(
-        "${RED}  ██████╗ ${GREEN}██████╗  ${YELLOW}██████╗  ${BLUE}██████╗ "
-        "${RED} ██╔═══██╗${GREEN}██╔══██╗ ${YELLOW}██╔═══██╗${BLUE}██╔═══██╗"
-        "${RED} ██║   ██║${GREEN}██║  ██║ ${YELLOW}██║   ██║${BLUE}██║   ██║"
-        "${RED} ██║   ██║${GREEN}██║  ██║ ${YELLOW}██║   ██║${BLUE}██║   ██║"
-        "${RED} ╚██████╔╝${GREEN}██████╔╝ ${YELLOW}╚██████╔╝${BLUE}╚██████╔╝"
-        "${RED}  ╚═════╝ ${GREEN}╚═════╝  ${YELLOW} ╚═════╝ ${BLUE} ╚═════╝ "
+}
+
+logo_flash() {
+    for c in "$GREEN" "$CYAN" "$YELLOW" "$MAGENTA" "$WHITE"; do
+        tone $((300 + RANDOM % 700)) 0.05 0.12
+        clear
+        echo
+        echo -e "${c}${BOLD}"
+cat <<'EOF'
+        ░█████╗░██████╗░░█████╗░░█████╗░
+        ██╔══██╗██╔══██╗██╔══██╗██╔══██╗
+        ██║░░██║██║░░██║██║░░██║██║░░██║
+        ██║░░██║██║░░██║██║░░██║██║░░██║
+        ╚█████╔╝██████╔╝╚█████╔╝╚█████╔╝
+        ░╚════╝░╚═════╝░░╚════╝░░╚════╝░
+EOF
+        echo -e "${NC}"
+        sleep_frame 0.09
+    done
+}
+
+type_retro() {
+    local text="$1"
+    printf "%18s" ""
+    for ((i=0; i<${#text}; i++)); do
+        tone 900 0.015 0.06
+        printf "${YELLOW}${BOLD}%s${NC}" "${text:$i:1}"
+        sleep_frame 0.035
+    done
+    echo
+}
+
+scanline_box() {
+    echo
+    center "${CYAN}${BOLD}╔════════════════════════════════════════════╗${NC}"
+    center "${CYAN}${BOLD}║${NC} ${WHITE}ODOO SERVER INSTALLER / UBUNTU 24.04${NC}       ${CYAN}${BOLD}║${NC}"
+    center "${CYAN}${BOLD}║${NC} ${GREEN}POSTGRESQL 16${NC}  ${YELLOW}NGINX SSL${NC}  ${MAGENTA}WEBMIN${NC}        ${CYAN}${BOLD}║${NC}"
+    center "${CYAN}${BOLD}╚════════════════════════════════════════════╝${NC}"
+    echo
+}
+
+fake_boot() {
+    local lines=(
+        "LOADING KERNEL MODULES"
+        "MOUNTING /ODOO"
+        "SYNCING POSTGRES CORE"
+        "ARMING NGINX LASERS"
+        "UNLOCKING ENTERPRISE MODE"
+        "SYSTEM READY"
     )
-    
+
     echo
-    for line in "${logo_lines[@]}"; do
-        printf "%15s" ""
-        echo -e "$line${NC}"
-        sleep 0.12
+    for line in "${lines[@]}"; do
+        printf "%18s${CYAN}>${NC} ${WHITE}%s${NC}" "" "$line"
+        sleep_frame 0.18
+        contra_inspired_ok
+        echo -e " ${GREEN}OK${NC}"
     done
-    
-    sleep 0.3
-    
-    # ── Phase 3: Typewriter effect for subtitle ──
+}
+
+retro_credits() {
+    clear
     echo
-    local subtitle="U L T I M A T E   I N S T A L L E R"
-    printf "%22s" ""
-    for ((i=0; i<${#subtitle}; i++)); do
-        local ci=$((i % 6))
-        printf "${colors[$ci]}${BOLD}%s${NC}" "${subtitle:$i:1}"
-        sleep 0.03
-    done
     echo
-    
-    # ── Phase 4: Version badge ──
-    sleep 0.3
-    printf "%27s" ""
-    echo -e "${DIM}${WHITE}── v${SCRIPT_VERSION} for Ubuntu 24.04 ──${NC}"
-    
-    sleep 0.3
-    
-    # ── Phase 5: Animated separator ──
+    center "${CYAN}${BOLD}╔════════════════════════════════════════════╗${NC}"
+    center "${CYAN}${BOLD}║${NC}              ${YELLOW}SYSTEM CREDITS${NC}              ${CYAN}${BOLD}║${NC}"
+    center "${CYAN}${BOLD}╚════════════════════════════════════════════╝${NC}"
+
     echo
-    printf "%10s" ""
-    for ((i=0; i<60; i++)); do
-        local ci=$((i % 6))
-        printf "${colors[$ci]}─${NC}"
-        sleep 0.008
-    done
+    sleep_frame 0.4
+
+    contra_inspired_action_riff
+    center "${WHITE}${BOLD}BY:${NC} ${GREEN}${BOLD}MAHMOUD ABDEL LATIF${NC}"
+    sleep_frame 0.4
+
+    center "${DIM}${WHITE}Crafted with precision & passion${NC}"
+    sleep_frame 0.4
+
+    tone 523 0.08; sleep 0.08
+    tone 659 0.08; sleep 0.08
+    tone 784 0.12
+
+    center "${MAGENTA}${BOLD}❤  MADE WITH LOVE FOR THE COMMUNITY  ❤${NC}"
+    sleep_frame 0.5
+
     echo
-    
-    # ── Phase 6: Author credit with glow effect ──
-    sleep 0.3
-    
-    local author_text="Mahmoud Abdel Latif"
-    local credit_prefix="Created by : "
-    
-    # Dim pass
-    printf "%22s" ""
-    echo -e "${DIM}${WHITE}${credit_prefix}${author_text}${NC}"
-    sleep 0.2
-    
-    # Overwrite with normal
-    printf "\033[1A"
-    printf "%22s" ""
-    echo -e "${WHITE}${credit_prefix}${BOLD}${CYAN}${author_text}${NC}"
-    sleep 0.2
-    
-    # Overwrite with glowing bold
-    printf "\033[1A"
-    printf "%22s" ""
-    echo -e "${WHITE}${credit_prefix}${BOLD}${GREEN}✦ ${CYAN}${author_text}${GREEN} ✦${NC}"
-    
-    sleep 0.2
-    printf "%27s" ""
-    echo -e "${DIM}${WHITE}https://mah007.net${NC}"
-    
-    # ── Phase 7: Animated feature list ──
-    sleep 0.4
+    center "${CYAN}${BOLD}https://mah007.net${NC}"
+
     echo
-    printf "%10s" ""
-    for ((i=0; i<60; i++)); do
-        local ci=$((i % 6))
-        printf "${colors[$ci]}─${NC}"
-        sleep 0.005
+    sleep_frame 1.3
+}
+
+insert_coin() {
+    for i in {1..6}; do
+        contra_inspired_coin
+        printf "\r%23s${GREEN}${BOLD}▶ PRESS ENTER TO DEPLOY ◀${NC}" ""
+        sleep_frame 0.35
+        printf "\r%70s" ""
+        sleep_frame 0.25
     done
     echo
-    echo
-    
-    local features=(
-        "${GREEN}◆${NC} ${WHITE}Odoo 14.0 → 19.0 ${DIM}(Community & Enterprise)${NC}"
-        "${GREEN}◆${NC} ${WHITE}Python Virtual Environment ${DIM}(Ubuntu 24.04 safe)${NC}"
-        "${GREEN}◆${NC} ${WHITE}PostgreSQL 16 ${DIM}(Latest stable)${NC}"
-        "${GREEN}◆${NC} ${WHITE}Nginx + SSL ${DIM}(Let's Encrypt / Self-signed)${NC}"
-        "${GREEN}◆${NC} ${WHITE}Webmin ${DIM}(Web-based administration)${NC}"
-        "${GREEN}◆${NC} ${WHITE}Auto Validation ${DIM}(Post-install health checks)${NC}"
-    )
-    
-    for feature in "${features[@]}"; do
-        printf "%15s" ""
-        echo -e "$feature"
-        sleep 0.15
+}
+
+atari_contra_intro() {
+    hide_cursor
+
+    contra_inspired_startup
+
+    for i in {1..4}; do
+        stars
+        tone $((180 + RANDOM % 220)) 0.04 0.08
+        sleep_frame 0.12
     done
-    
-    # ── Phase 8: Closing border with sparkle ──
-    echo
-    printf "%10s" ""
-    for ((i=0; i<60; i++)); do
-        local ci=$((i % 6))
-        printf "${colors[$ci]}━${NC}"
-        sleep 0.005
-    done
-    echo
-    echo
-    
-    # ── Phase 9: Ready prompt ──
-    printf "%20s" ""
-    echo -e "${BOLD}${YELLOW}⚡ Ready to install your Odoo server ⚡${NC}"
-    echo
-    
-    # Show cursor again
-    tput cnorm 2>/dev/null
-    
-    sleep 1
-    
-    printf "%25s" ""
-    echo -e -n "${DIM}${WHITE}Press Enter to continue...${NC}"
+
+    laser_lines
+    contra_inspired_action_riff
+    logo_flash
+
+    clear
+    pixel_logo
+    type_retro "8-BIT ODOO DEPLOYMENT ENGINE"
+
+    sleep_frame 0.4
+
+    scanline_box
+    fake_boot
+
+    sleep_frame 0.6
+    retro_credits
+
+    insert_coin
     read -r
+
+    show_cursor
+    clear
 }
 
 #==============================================================================
@@ -302,7 +414,7 @@ show_step_header() {
 cleanup_on_exit() {
     local exit_code=$?
     # Restore cursor visibility
-    tput cnorm 2>/dev/null
+    show_cursor
     if [ $exit_code -ne 0 ]; then
         echo
         echo -e "${RED}${BOLD}Installation interrupted or failed!${NC}"
@@ -343,7 +455,7 @@ check_root() {
 check_system_requirements() {
     local errors=0
     
-    # Check Ubuntu version - Updated for 24.04
+    # Check Ubuntu version
     if ! lsb_release -d | grep -q "Ubuntu 24.04"; then
         log_message "WARNING" "This script is optimized for Ubuntu 24.04. Current version: $(lsb_release -d | cut -f2)"
     fi
@@ -395,7 +507,6 @@ validate_odoo_version() {
 # DOMAIN AND SSL CONFIGURATION
 #==============================================================================
 
-# Domain configuration
 configure_domain() {
     clear
     display_billboard "Domain Configuration"
@@ -406,7 +517,6 @@ configure_domain() {
     echo -e "${CYAN}If you have a domain, we can set up SSL certificates automatically.${NC}"
     echo
     
-    # Get server IP
     get_server_ip
     echo -e "${YELLOW}Your server IP address: ${BOLD}$SERVER_IP${NC}"
     echo
@@ -435,12 +545,9 @@ configure_domain() {
             read -r domain_input
             
             if [ -n "$domain_input" ]; then
-                # Basic domain validation
                 if [[ "$domain_input" =~ ^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$ ]]; then
                     DOMAIN_NAME="$domain_input"
                     echo -e "${GREEN}Domain set to: $DOMAIN_NAME${NC}"
-                    
-                    # Verify domain DNS
                     verify_domain_dns
                     break
                 else
@@ -458,7 +565,6 @@ configure_domain() {
     log_message "INFO" "Domain configuration: HAS_DOMAIN=$HAS_DOMAIN, DOMAIN_NAME=$DOMAIN_NAME"
 }
 
-# Verify domain DNS configuration
 verify_domain_dns() {
     echo -e "${CYAN}Verifying domain DNS configuration...${NC}"
     
@@ -494,7 +600,6 @@ verify_domain_dns() {
     fi
 }
 
-# Nginx configuration
 configure_nginx() {
     clear
     display_billboard "Web Server Configuration"
@@ -534,7 +639,6 @@ configure_nginx() {
     log_message "INFO" "Nginx installation preference: $INSTALL_NGINX"
 }
 
-# SSL configuration
 configure_ssl() {
     echo
     echo -e "${BOLD}${WHITE}SSL Certificate Configuration${NC}"
@@ -573,7 +677,6 @@ configure_ssl() {
     log_message "INFO" "SSL certificate type: $SSL_TYPE"
 }
 
-# Webmin configuration
 configure_webmin() {
     clear
     display_billboard "Webmin Configuration"
@@ -618,7 +721,6 @@ configure_webmin() {
 # INTERACTIVE FUNCTIONS
 #==============================================================================
 
-# Odoo version selection
 select_odoo_version() {
     while true; do
         clear
@@ -658,7 +760,6 @@ select_odoo_version() {
     return 0
 }
 
-# Select Odoo edition (Community or Enterprise)
 select_odoo_edition() {
     while true; do
         clear
@@ -694,8 +795,6 @@ select_odoo_edition() {
                 IS_ENTERPRISE="True"
                 echo -e "${GREEN}Selected: Enterprise Edition${NC}"
                 log_message "INFO" "User selected Enterprise Edition"
-                
-                # Get GitHub credentials for Enterprise
                 if configure_github_credentials; then
                     return 0
                 else
@@ -714,7 +813,6 @@ select_odoo_edition() {
     done
 }
 
-# Configure GitHub credentials for Enterprise edition
 configure_github_credentials() {
     clear
     display_billboard "GitHub Configuration"
@@ -732,44 +830,34 @@ configure_github_credentials() {
     echo -e "  ${GRAY}4. Copy the generated token${NC}"
     echo
     
-    # Get GitHub username
     while true; do
         echo -e -n "${BOLD}${WHITE}Enter your GitHub username: ${NC}"
         read -r GITHUB_USERNAME
-        
         if [ -z "$GITHUB_USERNAME" ]; then
             echo -e "${RED}GitHub username cannot be empty. Please try again.${NC}"
             continue
         fi
-        
-        # Validate username format (basic validation)
         if [[ ! "$GITHUB_USERNAME" =~ ^[a-zA-Z0-9]([a-zA-Z0-9]|-)*[a-zA-Z0-9]$ ]]; then
             echo -e "${RED}Invalid GitHub username format. Please try again.${NC}"
             continue
         fi
-        
         break
     done
     
-    # Get GitHub token
     while true; do
         echo -e -n "${BOLD}${WHITE}Enter your GitHub Personal Access Token: ${NC}"
-        read -rs GITHUB_TOKEN  # -s for silent input (hidden)
+        read -rs GITHUB_TOKEN
         echo
-        
         if [ -z "$GITHUB_TOKEN" ]; then
             echo -e "${RED}GitHub token cannot be empty. Please try again.${NC}"
             continue
         fi
-        
         break
     done
     
-    # Test GitHub credentials
     echo
     echo -e "${CYAN}Testing GitHub credentials...${NC}"
     
-    # Test access to Odoo Enterprise repository
     local test_url="https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/odoo/enterprise.git"
     
     if git ls-remote --heads "$test_url" &>/dev/null; then
@@ -777,7 +865,6 @@ configure_github_credentials() {
         echo -e "${GREEN}✓ Access to Odoo Enterprise repository confirmed${NC}"
         log_message "INFO" "GitHub credentials verified for user: $GITHUB_USERNAME"
         
-        # Confirm the configuration
         echo
         echo -e "${BOLD}${WHITE}GitHub Configuration Summary:${NC}"
         echo -e "  ${CYAN}Username:${NC} $GITHUB_USERNAME"
@@ -790,7 +877,6 @@ configure_github_credentials() {
         if [[ "$confirm" =~ ^[Nn]$ ]]; then
             return 1
         fi
-        
         return 0
     else
         echo -e "${RED}✗ Failed to access Odoo Enterprise repository${NC}"
@@ -800,18 +886,15 @@ configure_github_credentials() {
         echo -e "  ${GRAY}• No access to Odoo Enterprise repository${NC}"
         echo -e "  ${GRAY}• Network connectivity issues${NC}"
         echo
-        
         echo -e -n "${BOLD}${WHITE}Try again? [Y/n]: ${NC}"
         read -r retry
         if [[ "$retry" =~ ^[Nn]$ ]]; then
             return 1
         fi
-        
         return 1
     fi
 }
 
-# Installation confirmation
 confirm_installation() {
     clear
     display_billboard "Installation Confirmation"
@@ -871,53 +954,39 @@ confirm_installation() {
 # INSTALLATION FUNCTIONS
 #==============================================================================
 
-# Step 1: Pre-flight checks
 step_preflight_checks() {
     show_step_header 1 "Pre-flight Checks" "Validating system requirements and configuration"
-    
-    # Check if running as root
     check_root
-    
-    # System requirements check
     if ! check_system_requirements; then
         log_message "ERROR" "System requirements check failed"
         exit 1
     fi
-    
-    # Validate Odoo version
     if ! validate_odoo_version; then
         log_message "ERROR" "Invalid Odoo version configuration"
         exit 1
     fi
-    
     log_message "INFO" "Pre-flight checks completed successfully"
 }
 
-# Step 2: System preparation
 step_system_preparation() {
     show_step_header 2 "System Preparation" "Creating users and updating system packages"
     
-    # Create Odoo user and group
     execute_simple "groupadd -f $OE_USER" "Creating Odoo group"
     execute_simple "useradd --create-home -d /home/$OE_USER --shell /bin/bash -g $OE_USER $OE_USER 2>/dev/null || true" "Creating Odoo user"
     execute_simple "usermod -aG sudo $OE_USER" "Adding Odoo user to sudo group"
     
-    # Update system packages
     execute_simple "apt-get update" "Updating package lists"
     execute_simple "apt-get upgrade -y" "Upgrading system packages"
     execute_simple "apt install -y zip gdebi net-tools curl wget gnupg2 software-properties-common" "Installing basic tools"
     
-    # Install Python virtual environment support (required for Ubuntu 24.04)
     execute_simple "apt install -y python3-full python3-venv python3-pip" "Installing Python virtual environment support"
     
-    # Configure localization
     execute_simple "export LC_ALL=en_US.UTF-8 && export LC_CTYPE=en_US.UTF-8" "Setting locale variables"
     execute_simple "dpkg-reconfigure -f noninteractive locales" "Configuring locales"
     
     log_message "INFO" "System preparation completed successfully"
 }
 
-# Step 3: Database setup
 step_database_setup() {
     show_step_header 3 "Database Setup" "Installing and configuring PostgreSQL database"
     
@@ -926,16 +995,10 @@ step_database_setup() {
     execute_simple "wget --quiet -O /etc/apt/keyrings/postgresql.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc" "Downloading PostgreSQL signing key"
     execute_simple "echo 'deb [signed-by=/etc/apt/keyrings/postgresql.asc] http://apt.postgresql.org/pub/repos/apt noble-pgdg main' > /etc/apt/sources.list.d/pgdg.list" "Adding PostgreSQL repository"
     
-    # Update package lists
     execute_simple "apt-get update" "Updating package lists with PostgreSQL repository"
-    
-    # Install PostgreSQL
     execute_simple "apt-get install -y postgresql-16 postgresql-server-dev-16" "Installing PostgreSQL 16"
-    
-    # Create PostgreSQL user for Odoo
     execute_simple "su - postgres -c \"createuser -s $OE_USER\" 2>/dev/null || true" "Creating PostgreSQL user for Odoo"
     
-    # Verify PostgreSQL installation
     if ! systemctl is-active --quiet postgresql; then
         log_message "ERROR" "PostgreSQL service is not running"
         execute_simple "systemctl start postgresql" "Starting PostgreSQL service"
@@ -945,41 +1008,32 @@ step_database_setup() {
     log_message "INFO" "Database setup completed successfully"
 }
 
-# Step 4: Python Environment Setup (for Ubuntu 24.04)
 step_python_environment_setup() {
     show_step_header 4 "Python Environment Setup" "Creating isolated Python environment for Odoo"
     
-    # Create Odoo directories
     execute_simple "mkdir -p /odoo" "Creating Odoo directory"
     execute_simple "mkdir -p /etc/odoo" "Creating Odoo configuration directory"
     execute_simple "mkdir -p /var/log/odoo" "Creating Odoo log directory"
     
-    # Create Python virtual environment
     execute_simple "python3 -m venv $PYTHON_VENV_PATH" "Creating Python virtual environment"
-    
-    # Upgrade pip in virtual environment
     execute_simple "$PYTHON_VENV_PATH/bin/pip install --upgrade pip" "Upgrading pip in virtual environment"
     
-    # Install essential Python packages in virtual environment
-    execute_simple "$PYTHON_VENV_PATH/bin/pip install wheel setuptools" "Installing essential Python packages"
+    # IMPORTANT: Pin setuptools<75 because Odoo uses pkg_resources which was removed in setuptools 78+
+    execute_simple "$PYTHON_VENV_PATH/bin/pip install wheel 'setuptools<75'" "Installing essential Python packages (setuptools pinned for pkg_resources)"
     
-    # Set proper ownership
     execute_simple "chown -R $OE_USER:$OE_USER /odoo" "Setting ownership for Odoo directory"
     execute_simple "chown -R $OE_USER:$OE_USER /var/log/odoo" "Setting ownership for log directory"
     execute_simple "chown -R $OE_USER:$OE_USER /etc/odoo" "Setting ownership for configuration directory"
     
-    # Create log file
     execute_simple "touch /var/log/odoo/odoo-server.log" "Creating Odoo log file"
     execute_simple "chown $OE_USER:$OE_USER /var/log/odoo/odoo-server.log" "Setting ownership for log file"
     
     log_message "INFO" "Python environment setup completed successfully"
 }
 
-# Step 5: Dependencies installation
 step_dependencies_installation() {
     show_step_header 5 "Dependencies Installation" "Installing system libraries and Python packages"
     
-    # Install system dependencies with better error handling
     local system_packages=(
         "git" "build-essential" "wget" "python3-dev" 
         "libfreetype6-dev" "libxml2-dev" "libzip-dev" "libldap2-dev" 
@@ -1013,9 +1067,8 @@ step_dependencies_installation() {
         log_message "WARNING" "Some packages failed to install: ${failed_packages[*]}"
     fi
     
-    # Install Node.js and npm packages
+    # Install Node.js
     execute_simple "mkdir -p /etc/apt/keyrings" "Creating keyrings directory"
-    
     if ! execute_simple "curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg" "Adding Node.js repository key"; then
         log_message "ERROR" "Failed to add Node.js repository key"
         return 1
@@ -1025,10 +1078,9 @@ step_dependencies_installation() {
     execute_simple "apt-get update" "Updating package lists with Node.js repository"
     execute_simple "apt-get install -y nodejs" "Installing Node.js"
     
-    # Create symbolic link for node
-    execute_simple "ln -sf /usr/bin/nodejs /usr/bin/node" "Creating Node.js symbolic link"
+    # Create symbolic link for node (may already exist, ignore errors)
+    ln -sf /usr/bin/nodejs /usr/bin/node 2>/dev/null || true
     
-    # Install npm packages for Enterprise features
     if [ "$IS_ENTERPRISE" = "True" ]; then
         execute_simple "npm install -g less" "Installing Less CSS preprocessor"
         execute_simple "npm install -g less-plugin-clean-css" "Installing Less clean CSS plugin"
@@ -1038,12 +1090,10 @@ step_dependencies_installation() {
     log_message "INFO" "Dependencies installation completed successfully"
 }
 
-# Step 6: Wkhtmltopdf installation
 step_wkhtmltopdf_installation() {
     show_step_header 6 "Wkhtmltopdf Installation" "Installing PDF generation library"
     
     if [ "$INSTALL_WKHTMLTOPDF" = "True" ]; then
-        # Determine architecture
         if [ "$(getconf LONG_BIT)" == "64" ]; then
             local wkhtml_url="$WKHTML_X64"
         else
@@ -1052,19 +1102,14 @@ step_wkhtmltopdf_installation() {
         
         local wkhtml_file=$(basename "$wkhtml_url")
         
-        # Download wkhtmltopdf
         if ! execute_simple "wget -O /tmp/$wkhtml_file $wkhtml_url" "Downloading wkhtmltopdf"; then
             log_message "ERROR" "Failed to download wkhtmltopdf"
             return 1
         fi
         
-        # Install wkhtmltopdf
         execute_simple "gdebi --non-interactive /tmp/$wkhtml_file" "Installing wkhtmltopdf"
-        
-        # Cleanup
         execute_simple "rm -f /tmp/$wkhtml_file" "Cleaning up wkhtmltopdf installer"
         
-        # Verify installation
         if command -v wkhtmltopdf &> /dev/null; then
             log_message "INFO" "Wkhtmltopdf installed successfully: $(wkhtmltopdf --version | head -n1)"
         else
@@ -1078,20 +1123,16 @@ step_wkhtmltopdf_installation() {
     log_message "INFO" "Wkhtmltopdf installation completed"
 }
 
-# Step 7: Odoo installation
 step_odoo_installation() {
     show_step_header 7 "Odoo Installation" "Downloading and configuring Odoo source code"
     
-    # Clone Odoo repository
     cd /odoo || { log_message "ERROR" "Failed to change directory to /odoo"; return 1; }
     
-    # Clone Community repository
     if ! execute_simple "git clone --depth 1 --branch $OE_BRANCH https://www.github.com/odoo/odoo" "Cloning Odoo Community repository"; then
         log_message "ERROR" "Failed to clone Odoo Community repository"
         return 1
     fi
     
-    # Clone Enterprise repository if selected
     if [ "$IS_ENTERPRISE" = "True" ]; then
         echo -e "${CYAN}Cloning Odoo Enterprise repository...${NC}"
         local enterprise_url="https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/odoo/enterprise.git"
@@ -1106,7 +1147,6 @@ step_odoo_installation() {
             echo
             echo -e "${YELLOW}Continuing with Community edition only...${NC}"
             IS_ENTERPRISE="False"
-            # Clean up partial clone if any
             rm -rf /odoo/enterprise 2>/dev/null
             log_message "WARNING" "Falling back to Community edition due to Enterprise clone failure"
         else
@@ -1114,58 +1154,45 @@ step_odoo_installation() {
         fi
     fi
     
-    # Set ownership for Odoo directory
     execute_simple "chown -R $OE_USER:$OE_USER /odoo" "Setting ownership for Odoo directory"
     
-    # Install Odoo Python requirements using virtual environment
     echo -e "${CYAN}Installing Odoo Python requirements in virtual environment...${NC}"
     if ! execute_simple "su - $OE_USER -s /bin/bash -c \"$PYTHON_VENV_PATH/bin/pip install -r /odoo/odoo/requirements.txt\"" "Installing Odoo Python requirements"; then
         log_message "WARNING" "Some Odoo requirements may have failed to install, continuing"
     fi
     
-    # Install additional Python packages
+    # Re-pin setuptools after requirements.txt install (it may have upgraded setuptools to an incompatible version)
+    # Odoo uses pkg_resources which was removed in setuptools 78+
+    execute_simple "su - $OE_USER -s /bin/bash -c \"$PYTHON_VENV_PATH/bin/pip install 'setuptools<75'\"" "Re-pinning setuptools for pkg_resources compatibility"
+    
     execute_simple "su - $OE_USER -s /bin/bash -c \"$PYTHON_VENV_PATH/bin/pip install phonenumbers\"" "Installing phonenumbers library"
     execute_simple "su - $OE_USER -s /bin/bash -c \"$PYTHON_VENV_PATH/bin/pip install psycogreen\"" "Installing psycogreen library"
     
     log_message "INFO" "Odoo installation completed successfully"
 }
 
-
-# Step 8: Service configuration
 step_service_configuration() {
     show_step_header 8 "Service Configuration" "Configuring Odoo system service and web server"
     
-    # Create Odoo service file with virtual environment Python
     create_odoo_service_file
-    
-    # Generate dynamic Odoo configuration
     generate_odoo_config
     
-    # Reload systemd and enable Odoo service
     execute_simple "systemctl daemon-reload" "Reloading systemd daemon"
     execute_simple "systemctl enable odoo" "Enabling Odoo service"
     
-    # Install and configure Nginx if requested
     if [ "$INSTALL_NGINX" = "true" ]; then
         install_official_nginx
-        
-        # Configure SSL certificates
         if [ "$SSL_TYPE" = "letsencrypt" ]; then
             install_letsencrypt_ssl
         else
             generate_self_signed_ssl
         fi
-        
-        # Create Nginx configuration for Odoo
         create_nginx_odoo_config
     fi
     
-    # Configure firewall rules
     configure_firewall
     
-    # Start Odoo service
     if execute_simple "systemctl start odoo" "Starting Odoo service"; then
-        # Poll for Odoo to start instead of fixed sleep
         echo -e "${CYAN}Waiting for Odoo to start...${NC}"
         local max_wait=30
         local waited=0
@@ -1178,7 +1205,6 @@ step_service_configuration() {
             sleep 2
             waited=$((waited + 2))
         done
-        
         if [ $waited -ge $max_wait ]; then
             log_message "ERROR" "Odoo service failed to start within ${max_wait}s"
             execute_simple "systemctl status odoo" "Checking Odoo service status"
@@ -1192,7 +1218,6 @@ step_service_configuration() {
 # HELPER FUNCTIONS
 #==============================================================================
 
-# Create Odoo service file with virtual environment Python
 create_odoo_service_file() {
     cat > /etc/systemd/system/odoo.service << EOF
 [Unit]
@@ -1216,16 +1241,13 @@ EOF
     log_message "INFO" "Created Odoo service file with virtual environment Python"
 }
 
-# Generate Odoo configuration
 generate_odoo_config() {
-    # Determine addons path based on edition
     local addons_path="/odoo/odoo/addons"
     if [ "$IS_ENTERPRISE" = "True" ] && [ -d "/odoo/enterprise" ]; then
         addons_path="/odoo/odoo/addons,/odoo/enterprise"
         log_message "INFO" "Enterprise addons path added to configuration"
     fi
     
-    # Determine proxy mode based on Nginx
     local proxy_mode="False"
     if [ "$INSTALL_NGINX" = "true" ]; then
         proxy_mode="True"
@@ -1245,20 +1267,16 @@ log_level = info
 proxy_mode = $proxy_mode
 EOF
     
-    # Set proper ownership and permissions
     execute_simple "chown $OE_USER:$OE_USER /etc/odoo/odoo.conf" "Setting ownership for configuration file"
     execute_simple "chmod 640 /etc/odoo/odoo.conf" "Setting permissions for configuration file"
     
-    # Generate full configuration using Odoo's built-in method
     echo -e "${CYAN}Generating full configuration using Odoo...${NC}"
     
     if execute_simple "su - $OE_USER -s /bin/bash -c 'cd /odoo/odoo && $PYTHON_VENV_PATH/bin/python ./odoo-bin -s -c /etc/odoo/odoo.conf --stop-after-init'" "Generating Odoo configuration"; then
         log_message "INFO" "Odoo configuration generated successfully"
-        
         # Re-apply our custom settings since odoo-bin -s overwrites the config
         execute_simple "sed -i 's|^addons_path.*|addons_path = $addons_path|' /etc/odoo/odoo.conf" "Re-applying addons path"
         execute_simple "sed -i 's|^proxy_mode.*|proxy_mode = $proxy_mode|' /etc/odoo/odoo.conf" "Re-applying proxy mode"
-        
         log_message "INFO" "Odoo configuration completed"
     else
         log_message "ERROR" "Failed to generate Odoo configuration"
@@ -1266,11 +1284,9 @@ EOF
     fi
 }
 
-# Install official Nginx (latest version)
 install_official_nginx() {
     echo -e "${CYAN}Installing official Nginx (latest version)...${NC}"
     
-    # Remove any existing Nginx installation
     execute_simple "apt-get remove -y nginx nginx-common nginx-core" "Removing existing Nginx packages"
     execute_simple "apt-get autoremove -y" "Cleaning up unused packages"
     
@@ -1280,7 +1296,6 @@ install_official_nginx() {
     execute_simple "echo 'deb [signed-by=/etc/apt/keyrings/nginx.gpg] https://nginx.org/packages/ubuntu/ noble nginx' > /etc/apt/sources.list.d/nginx.list" "Adding Nginx repository"
     execute_simple "echo 'deb-src [signed-by=/etc/apt/keyrings/nginx.gpg] https://nginx.org/packages/ubuntu/ noble nginx' >> /etc/apt/sources.list.d/nginx.list" "Adding Nginx source repository"
     
-    # Set repository priority
     cat > /etc/apt/preferences.d/99nginx << EOF
 Package: *
 Pin: origin nginx.org
@@ -1288,19 +1303,15 @@ Pin: release o=nginx
 Pin-Priority: 900
 EOF
     
-    # Update and install Nginx
     execute_simple "apt-get update" "Updating package lists with Nginx repository"
     execute_simple "apt-get install -y nginx" "Installing official Nginx"
     
-    # Verify Nginx installation
     local nginx_version=$(nginx -v 2>&1 | cut -d' ' -f3 | cut -d'/' -f2)
     log_message "INFO" "Nginx installed successfully: version $nginx_version"
     
-    # Enable and start Nginx
     execute_simple "systemctl enable nginx" "Enabling Nginx service"
     execute_simple "systemctl start nginx" "Starting Nginx service"
     
-    # Verify Nginx is running
     if systemctl is-active --quiet nginx; then
         log_message "INFO" "Nginx service is running"
     else
@@ -1309,56 +1320,40 @@ EOF
     fi
 }
 
-# Generate self-signed SSL certificate
 generate_self_signed_ssl() {
     echo -e "${CYAN}Generating self-signed SSL certificate...${NC}"
     
-    # Create SSL directory
     execute_simple "mkdir -p /etc/ssl/nginx" "Creating SSL directory"
-    
-    # Generate private key and certificate
     execute_simple "openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
         -keyout /etc/ssl/nginx/server.key \
         -out /etc/ssl/nginx/server.crt \
         -subj \"/C=US/ST=State/L=City/O=Organization/OU=OrgUnit/CN=$DOMAIN_NAME\"" "Generating SSL certificate"
     
-    # Set proper permissions
     execute_simple "chmod 600 /etc/ssl/nginx/server.key" "Setting SSL key permissions"
     execute_simple "chmod 644 /etc/ssl/nginx/server.crt" "Setting SSL certificate permissions"
     
     log_message "INFO" "Self-signed SSL certificate generated successfully"
 }
 
-# Install and configure Let's Encrypt
 install_letsencrypt_ssl() {
     echo -e "${CYAN}Installing Let's Encrypt SSL certificate...${NC}"
     
-    # Install snapd if not present
     if ! command -v snap &> /dev/null; then
         execute_simple "apt-get install -y snapd" "Installing snapd"
         execute_simple "systemctl enable --now snapd.socket" "Enabling snapd"
         execute_simple "ln -s /var/lib/snapd/snap /snap" "Creating snap symlink"
     fi
     
-    # Remove any existing certbot packages
     execute_simple "apt-get remove -y certbot" "Removing existing certbot packages"
-    
-    # Install certbot via snap
     execute_simple "snap install --classic certbot" "Installing Certbot via snap"
     execute_simple "ln -sf /snap/bin/certbot /usr/bin/certbot" "Creating Certbot symlink"
     
-    # Create temporary Nginx configuration for domain verification
     create_temporary_nginx_config
-    
-    # Reload Nginx with temporary config
     execute_simple "nginx -t" "Testing Nginx configuration"
     execute_simple "systemctl reload nginx" "Reloading Nginx"
     
-    # Get SSL certificate
     if execute_simple "certbot --nginx -d $DOMAIN_NAME --non-interactive --agree-tos --email admin@$DOMAIN_NAME" "Obtaining Let's Encrypt certificate"; then
         log_message "INFO" "Let's Encrypt SSL certificate obtained successfully"
-        
-        # Test automatic renewal
         execute_simple "certbot renew --dry-run" "Testing automatic renewal"
     else
         log_message "ERROR" "Failed to obtain Let's Encrypt certificate, falling back to self-signed"
@@ -1367,7 +1362,6 @@ install_letsencrypt_ssl() {
     fi
 }
 
-# Create temporary Nginx configuration
 create_temporary_nginx_config() {
     cat > /etc/nginx/conf.d/odoo.conf << EOF
 server {
@@ -1383,8 +1377,6 @@ server {
     }
 }
 EOF
-    
-    # Create web root directory
     execute_simple "mkdir -p /var/www/html" "Creating web root directory"
     log_message "INFO" "Created temporary Nginx configuration for SSL certificate verification"
 }
@@ -1476,14 +1468,11 @@ server {
 }
 EOF
     
-    # Test Nginx configuration
     execute_simple "nginx -t" "Testing Nginx configuration"
     execute_simple "systemctl reload nginx" "Reloading Nginx with Odoo configuration"
-    
     log_message "INFO" "Created Nginx configuration for Odoo with SSL"
 }
 
-# Configure firewall rules
 configure_firewall() {
     echo -e "${CYAN}Configuring firewall rules...${NC}"
     
@@ -1494,42 +1483,36 @@ configure_firewall() {
         else
             execute_simple "ufw allow 8069" "Opening Odoo port 8069"
         fi
-        
         if [ "$INSTALL_WEBMIN" = "true" ]; then
             execute_simple "ufw allow 10000" "Opening Webmin port 10000"
         fi
-        
         log_message "INFO" "Firewall rules configured"
     else
         log_message "WARNING" "UFW firewall not found, please manually configure firewall rules"
     fi
 }
 
-# Step 9: Webmin installation
 step_webmin_installation() {
     show_step_header 9 "Webmin Installation" "Installing and configuring Webmin web-based administration"
     
     if [ "$INSTALL_WEBMIN" = "true" ]; then
-        # Download and run Webmin setup script
         echo -e "${CYAN}Setting up Webmin repository...${NC}"
         if ! execute_simple "curl -o /tmp/webmin-setup-repo.sh https://raw.githubusercontent.com/webmin/webmin/master/webmin-setup-repo.sh" "Downloading Webmin setup script"; then
             log_message "ERROR" "Failed to download Webmin setup script"
             return 1
         fi
         
-        # Run the setup script (fixed: was "bash yes |" instead of "yes | bash")
+        # Fixed: was "bash yes |" instead of "yes | bash"
         if ! execute_simple "yes | bash /tmp/webmin-setup-repo.sh" "Setting up Webmin repository"; then
             log_message "ERROR" "Failed to setup Webmin repository"
             return 1
         fi
         
-        # Install Webmin with recommended packages
         if ! execute_simple "apt-get install --install-recommends webmin -y" "Installing Webmin"; then
             log_message "ERROR" "Failed to install Webmin"
             return 1
         fi
         
-        # Verify Webmin service is running
         if systemctl is-active --quiet webmin; then
             log_message "INFO" "Webmin service is running"
         else
@@ -1538,29 +1521,20 @@ step_webmin_installation() {
             execute_simple "systemctl enable webmin" "Enabling Webmin service"
         fi
         
-        # Configure Webmin SSL if we have certificates
         configure_webmin_ssl
-        
-        # Cleanup
         execute_simple "rm -f /tmp/webmin-setup-repo.sh" "Cleaning up Webmin setup script"
-        
         log_message "INFO" "Webmin installation completed successfully"
     else
         log_message "INFO" "Webmin installation skipped by user configuration"
     fi
 }
 
-# Configure Webmin SSL
 configure_webmin_ssl() {
     echo -e "${CYAN}Configuring Webmin SSL...${NC}"
     
-    # If we have Let's Encrypt certificates and a domain, configure Webmin to use them
     if [ "$SSL_TYPE" = "letsencrypt" ] && [ "$HAS_DOMAIN" = "true" ]; then
         local webmin_cert_file="/etc/webmin/webmin.pem"
-        
-        # Combine certificates for Webmin
         if execute_simple "cat /etc/letsencrypt/live/$DOMAIN_NAME/fullchain.pem /etc/letsencrypt/live/$DOMAIN_NAME/privkey.pem > $webmin_cert_file" "Creating Webmin certificate file"; then
-            # Update Webmin configuration
             execute_simple "sed -i 's|keyfile=.*|keyfile=$webmin_cert_file|' /etc/webmin/miniserv.conf" "Updating Webmin SSL configuration"
             execute_simple "systemctl restart webmin" "Restarting Webmin service"
             log_message "INFO" "Webmin configured to use Let's Encrypt SSL certificates"
@@ -1576,13 +1550,11 @@ configure_webmin_ssl() {
 # VALIDATION AND REPORTING FUNCTIONS
 #==============================================================================
 
-# Validate installation
 validate_installation() {
     local validation_errors=0
     
     echo -e "${CYAN}Running installation validation tests...${NC}"
     
-    # Check if Odoo service is running
     if systemctl is-active --quiet odoo; then
         echo -e "${GREEN}✓${NC} Odoo service is running"
         log_message "INFO" "Validation: Odoo service is running"
@@ -1592,7 +1564,6 @@ validate_installation() {
         validation_errors=$((validation_errors + 1))
     fi
     
-    # Check if PostgreSQL is running
     if systemctl is-active --quiet postgresql; then
         echo -e "${GREEN}✓${NC} PostgreSQL service is running"
         log_message "INFO" "Validation: PostgreSQL service is running"
@@ -1602,7 +1573,6 @@ validate_installation() {
         validation_errors=$((validation_errors + 1))
     fi
     
-    # Check if Nginx is running (if installed)
     if [ "$INSTALL_NGINX" = "true" ]; then
         if systemctl is-active --quiet nginx; then
             echo -e "${GREEN}✓${NC} Nginx service is running"
@@ -1614,7 +1584,6 @@ validate_installation() {
         fi
     fi
     
-    # Check if Webmin is running (if installed)
     if [ "$INSTALL_WEBMIN" = "true" ]; then
         if systemctl is-active --quiet webmin; then
             echo -e "${GREEN}✓${NC} Webmin service is running"
@@ -1626,7 +1595,6 @@ validate_installation() {
         fi
     fi
     
-    # Check if Python virtual environment exists
     if [ -d "$PYTHON_VENV_PATH" ]; then
         echo -e "${GREEN}✓${NC} Python virtual environment exists"
         log_message "INFO" "Validation: Python virtual environment exists"
@@ -1636,7 +1604,6 @@ validate_installation() {
         validation_errors=$((validation_errors + 1))
     fi
     
-    # Check if Odoo directories exist
     if [ -d "/odoo/odoo" ]; then
         echo -e "${GREEN}✓${NC} Odoo source code directory exists"
         log_message "INFO" "Validation: Odoo source code directory exists"
@@ -1646,7 +1613,6 @@ validate_installation() {
         validation_errors=$((validation_errors + 1))
     fi
     
-    # Check if configuration file exists
     if [ -f "/etc/odoo/odoo.conf" ]; then
         echo -e "${GREEN}✓${NC} Odoo configuration file exists"
         log_message "INFO" "Validation: Odoo configuration file exists"
@@ -1656,7 +1622,6 @@ validate_installation() {
         validation_errors=$((validation_errors + 1))
     fi
     
-    # Test network connectivity to Odoo
     if systemctl is-active --quiet odoo; then
         if [ "$INSTALL_NGINX" = "true" ]; then
             if curl -k -s "https://$DOMAIN_NAME" > /dev/null; then
@@ -1677,7 +1642,6 @@ validate_installation() {
         fi
     fi
     
-    # Test Webmin access (if installed)
     if [ "$INSTALL_WEBMIN" = "true" ] && systemctl is-active --quiet webmin; then
         if curl -k -s "https://localhost:10000" > /dev/null; then
             echo -e "${GREEN}✓${NC} Webmin web interface is accessible"
@@ -1691,7 +1655,6 @@ validate_installation() {
     return $validation_errors
 }
 
-# Generate installation report
 generate_installation_report() {
     local report_file="/tmp/odoo_installation_report_$(date +%Y%m%d_%H%M%S).txt"
     
@@ -1747,6 +1710,7 @@ UBUNTU 24.04 COMPATIBILITY:
 - Externally Managed Environment: Handled via virtual environment
 - System Python: Protected from direct pip installations
 - Package Management: Mixed apt/venv approach
+- setuptools: Pinned to <75 for pkg_resources compatibility
 
 IMPORTANT FILES:
 - Odoo Configuration: /etc/odoo/odoo.conf
@@ -1783,13 +1747,10 @@ EOF
     
     echo -e "${GREEN}Installation report generated: $report_file${NC}"
     log_message "INFO" "Installation report generated: $report_file"
-    
-    # Also save to a standard location
     cp "$report_file" "/root/odoo_installation_report.txt"
     log_message "INFO" "Installation report also saved to: /root/odoo_installation_report.txt"
 }
 
-# Installation success message
 show_success_message() {
     clear
     display_billboard "Installation Complete!"
@@ -1869,11 +1830,9 @@ show_success_message() {
 # MAIN EXECUTION FLOW
 #==============================================================================
 
-# Main installation function
 main_installation() {
     local start_time=$(date +%s)
     
-    # Execute all installation steps
     step_preflight_checks
     step_system_preparation
     step_database_setup
@@ -1884,13 +1843,11 @@ main_installation() {
     step_service_configuration
     step_webmin_installation
     
-    # Calculate installation time
     local end_time=$(date +%s)
     local duration=$((end_time - start_time))
     local minutes=$((duration / 60))
     local seconds=$((duration % 60))
     
-    # Validate installation
     if validate_installation; then
         show_success_message
         log_message "INFO" "Installation completed successfully in ${minutes}m ${seconds}s"
@@ -1901,7 +1858,6 @@ main_installation() {
         log_message "WARNING" "Installation completed with validation errors in ${minutes}m ${seconds}s"
     fi
     
-    # Generate installation report
     generate_installation_report
 }
 
@@ -1914,9 +1870,8 @@ log_message "INFO" "Starting $SCRIPT_NAME v$SCRIPT_VERSION"
 log_message "INFO" "System: $(lsb_release -d | cut -f2)"
 log_message "INFO" "User: $(whoami)"
 
-# Show animated intro
-show_animated_intro
-clear
+# Show retro intro
+atari_contra_intro
 
 echo -e "${BOLD}${WHITE}Welcome to the Enhanced Odoo Installation Script for Ubuntu 24.04!${NC}"
 echo
@@ -1939,42 +1894,31 @@ echo
 echo -e "${CYAN}This installation will take approximately 10-15 minutes.${NC}"
 echo
 
-# Interactive configuration
 echo -e "${BOLD}${WHITE}Let's configure your installation:${NC}"
 echo
 
-# Step 1: Select Odoo version
 if ! select_odoo_version; then
     echo -e "${YELLOW}Installation cancelled by user.${NC}"
     exit 0
 fi
 
-# Step 2: Select Odoo edition (Community or Enterprise)
 if ! select_odoo_edition; then
     echo -e "${YELLOW}Installation cancelled by user.${NC}"
     exit 0
 fi
 
-# Step 3: Configure domain
 configure_domain
-
-# Step 4: Configure Nginx
 configure_nginx
-
-# Step 5: Configure Webmin
 configure_webmin
 
-# Step 6: Confirm installation
 if ! confirm_installation; then
     echo -e "${YELLOW}Installation cancelled by user.${NC}"
     exit 0
 fi
 
-# Start installation
 echo -e "${GREEN}${BOLD}Starting installation...${NC}"
 echo
 main_installation
 
-# End of script
 log_message "INFO" "Script execution completed"
 echo -e "${GREEN}${BOLD}Script execution completed. Check the installation report for details.${NC}"
