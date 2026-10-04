@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Enhanced Odoo Installation Script for Ubuntu 24.04 - Complete Version with domain, Nginx, SSL, and Webmin
-# Version: 3.1-UBUNTU24-COMPLETE
+# Version: 3.2-UBUNTU24-COMPLETE
 # Author: Mahmoud Abdel Latif, https://mah007.net 
 # Description: Interactive Odoo installation with domain configuration, official Nginx, SSL certificates, and Webmin
 
 # Script configuration
-SCRIPT_VERSION="3.1-UBUNTU24-COMPLETE"
+SCRIPT_VERSION="3.2-UBUNTU24-COMPLETE"
 SCRIPT_NAME="Enhanced Odoo Installer with Domain, SSL & Webmin Support for Ubuntu 24.04"
 LOG_FILE="/tmp/odoo_install_$(date +%Y%m%d_%H%M%S).log"
 CONFIG_FILE="/tmp/odoo_install_config.conf"
@@ -35,8 +35,8 @@ OE_USER="odoo"
 OE_BRANCH=""
 INSTALL_WKHTMLTOPDF="True"
 IS_ENTERPRISE="True"
-WKHTML_X64="https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.jammy_amd64.deb"
-WKHTML_X32="https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.jammy_amd64.deb"
+# Architecture suffix (_amd64.deb / _arm64.deb) is appended at install time
+WKHTML_BASE_URL="https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.jammy"
 
 # New variables for domain and SSL management
 DOMAIN_NAME=""
@@ -476,7 +476,7 @@ check_system_requirements() {
     fi
     
     # Check internet connectivity
-    if ! ping -c 1 google.com &> /dev/null; then
+    if ! curl -fsI --max-time 15 https://github.com &> /dev/null; then
         log_message "ERROR" "No internet connection detected"
         errors=$((errors + 1))
     fi
@@ -492,7 +492,7 @@ check_system_requirements() {
 # Validate Odoo version selection
 validate_odoo_version() {
     case "$OE_BRANCH" in
-        "14.0"|"15.0"|"16.0"|"17.0"|"18.0"|"19.0")
+        "14.0"|"15.0"|"16.0"|"17.0"|"18.0"|"19.0"|"20.0")
             return 0
             ;;
         *)
@@ -568,7 +568,12 @@ configure_domain() {
 verify_domain_dns() {
     echo -e "${CYAN}Verifying domain DNS configuration...${NC}"
     
-    local domain_ip=$(dig +short "$DOMAIN_NAME" 2>/dev/null | tail -n1)
+    local domain_ip
+    if command -v dig &> /dev/null; then
+        domain_ip=$(dig +short "$DOMAIN_NAME" 2>/dev/null | tail -n1)
+    else
+        domain_ip=$(getent ahostsv4 "$DOMAIN_NAME" 2>/dev/null | awk '{print $1; exit}')
+    fi
     
     if [ -n "$domain_ip" ]; then
         if [ "$domain_ip" = "$SERVER_IP" ]; then
@@ -728,28 +733,40 @@ select_odoo_version() {
         
         echo -e "${BOLD}${WHITE}Please select the Odoo version to install:${NC}"
         echo
-        echo -e "  ${YELLOW}1)${NC} Odoo 14.0 ${CYAN}(LTS - Long Term Support)${NC}"
-        echo -e "  ${YELLOW}2)${NC} Odoo 15.0 ${CYAN}(Stable)${NC}"
-        echo -e "  ${YELLOW}3)${NC} Odoo 16.0 ${CYAN}(Stable)${NC}"
-        echo -e "  ${YELLOW}4)${NC} Odoo 17.0 ${CYAN}(Stable)${NC}"
-        echo -e "  ${YELLOW}5)${NC} Odoo 18.0 ${CYAN}(Latest)${NC}"
-        echo -e "  ${YELLOW}6)${NC} Odoo 19.0 ${CYAN}(Latest - May have issues)${NC}"
-        echo -e "  ${YELLOW}7)${NC} Back to Main Menu"
+        echo -e "  ${YELLOW}1)${NC} Odoo 14.0 ${RED}(Legacy - not compatible with Python 3.12)${NC}"
+        echo -e "  ${YELLOW}2)${NC} Odoo 15.0 ${CYAN}(Legacy)${NC}"
+        echo -e "  ${YELLOW}3)${NC} Odoo 16.0 ${CYAN}(Legacy)${NC}"
+        echo -e "  ${YELLOW}4)${NC} Odoo 17.0 ${CYAN}(Legacy)${NC}"
+        echo -e "  ${YELLOW}5)${NC} Odoo 18.0 ${CYAN}(Stable)${NC}"
+        echo -e "  ${YELLOW}6)${NC} Odoo 19.0 ${CYAN}(Stable)${NC}"
+        echo -e "  ${YELLOW}7)${NC} Odoo 20.0 ${CYAN}(Latest - requires PostgreSQL 16+ and Python 3.12+)${NC}"
+        echo -e "  ${YELLOW}8)${NC} Back to Main Menu"
         echo
-        
-        echo -e -n "${BOLD}${WHITE}Enter your choice [1-7]: ${NC}"
+
+        echo -e -n "${BOLD}${WHITE}Enter your choice [1-8]: ${NC}"
         read -r choice
-        
+
         case "$choice" in
-            1) OE_BRANCH="14.0"; break;;
+            1)
+                # Odoo 14.0 pins gevent/greenlet/Pillow versions that do not build on Ubuntu 24.04's Python 3.12
+                echo -e "${YELLOW}Warning: Odoo 14.0 requirements do not install on Python 3.12 (Ubuntu 24.04).${NC}"
+                echo -e "${YELLOW}Use Ubuntu 22.04 (odoo_installer.sh) for Odoo 14.0.${NC}"
+                echo -e -n "${BOLD}${WHITE}Continue with Odoo 14.0 anyway? [y/N]: ${NC}"
+                read -r confirm_legacy
+                if [[ "$confirm_legacy" =~ ^[Yy]$ ]]; then
+                    OE_BRANCH="14.0"
+                    break
+                fi
+                ;;
             2) OE_BRANCH="15.0"; break;;
             3) OE_BRANCH="16.0"; break;;
             4) OE_BRANCH="17.0"; break;;
             5) OE_BRANCH="18.0"; break;;
             6) OE_BRANCH="19.0"; break;;
-            7) return 1;;
-            *) 
-                echo -e "${RED}Invalid choice. Please select 1-7.${NC}"
+            7) OE_BRANCH="20.0"; break;;
+            8) return 1;;
+            *)
+                echo -e "${RED}Invalid choice. Please select 1-8.${NC}"
                 sleep 2
                 ;;
         esac
@@ -981,8 +998,11 @@ step_system_preparation() {
     
     execute_simple "apt install -y python3-full python3-venv python3-pip" "Installing Python virtual environment support"
     
+    # Generate en_US.UTF-8 before PostgreSQL is installed so the cluster is created with UTF-8 encoding
+    execute_simple "apt-get install -y locales" "Installing locales package"
+    execute_simple "locale-gen en_US.UTF-8" "Generating en_US.UTF-8 locale"
+    execute_simple "update-locale LANG=en_US.UTF-8" "Setting default system locale"
     execute_simple "export LC_ALL=en_US.UTF-8 && export LC_CTYPE=en_US.UTF-8" "Setting locale variables"
-    execute_simple "dpkg-reconfigure -f noninteractive locales" "Configuring locales"
     
     log_message "INFO" "System preparation completed successfully"
 }
@@ -1038,10 +1058,13 @@ step_dependencies_installation() {
         "git" "build-essential" "wget" "python3-dev" 
         "libfreetype6-dev" "libxml2-dev" "libzip-dev" "libldap2-dev" 
         "libsasl2-dev" "node-less" "libjpeg-dev" "zlib1g-dev" 
-        "libpq-dev" "libtiff5-dev" "libjpeg8-dev" "libopenjp2-7-dev" 
-        "liblcms2-dev" "libwebp-dev" "libharfbuzz-dev" "libfribidi-dev" 
-        "libxcb1-dev" "libwww-perl" "gsfonts" "libcairo2-dev" 
+        "libpq-dev" "libtiff-dev" "libjpeg8-dev" "libopenjp2-7-dev"
+        "liblcms2-dev" "libwebp-dev" "libharfbuzz-dev" "libfribidi-dev"
+        "libxcb1-dev" "libwww-perl" "gsfonts" "libcairo2-dev"
         "python3-cairo" "ca-certificates" "gnupg" "postgresql-16-pgvector"
+        "libssl-dev" "libffi-dev" "libmagic1"
+        # Fonts listed in Odoo's debian/control (used by PDF reports and the web client)
+        "fonts-dejavu-core" "fonts-inconsolata" "fonts-font-awesome" "fonts-roboto-unhinted"
     )
     
     echo -e "${CYAN}Installing system packages (some may fail, this is normal)...${NC}"
@@ -1081,11 +1104,9 @@ step_dependencies_installation() {
     # Create symbolic link for node (may already exist, ignore errors)
     ln -sf /usr/bin/nodejs /usr/bin/node 2>/dev/null || true
     
-    if [ "$IS_ENTERPRISE" = "True" ]; then
-        execute_simple "npm install -g less" "Installing Less CSS preprocessor"
-        execute_simple "npm install -g less-plugin-clean-css" "Installing Less clean CSS plugin"
-        execute_simple "npm install -g rtlcss" "Installing RTL CSS processor"
-    fi
+    # rtlcss is needed by Community and Enterprise to build assets for right-to-left languages (Arabic, Hebrew...).
+    # less is no longer used: Odoo 12+ compiles SCSS with libsass.
+    execute_simple "npm install -g rtlcss" "Installing RTL CSS processor"
     
     log_message "INFO" "Dependencies installation completed successfully"
 }
@@ -1094,11 +1115,15 @@ step_wkhtmltopdf_installation() {
     show_step_header 6 "Wkhtmltopdf Installation" "Installing PDF generation library"
     
     if [ "$INSTALL_WKHTMLTOPDF" = "True" ]; then
-        if [ "$(getconf LONG_BIT)" == "64" ]; then
-            local wkhtml_url="$WKHTML_X64"
-        else
-            local wkhtml_url="$WKHTML_X32"
-        fi
+        local arch=$(dpkg --print-architecture)
+        case "$arch" in
+            amd64|arm64) ;;
+            *)
+                log_message "ERROR" "No wkhtmltopdf package available for architecture: $arch"
+                return 1
+                ;;
+        esac
+        local wkhtml_url="${WKHTML_BASE_URL}_${arch}.deb"
         
         local wkhtml_file=$(basename "$wkhtml_url")
         
@@ -1128,16 +1153,36 @@ step_odoo_installation() {
     
     cd /odoo || { log_message "ERROR" "Failed to change directory to /odoo"; return 1; }
     
-    if ! execute_simple "git clone --depth 1 --branch $OE_BRANCH https://www.github.com/odoo/odoo" "Cloning Odoo Community repository"; then
+    # Reuse an existing checkout so the script can be re-run after a failure
+    if [ -d /odoo/odoo/.git ]; then
+        local current_branch=$(git -c safe.directory=/odoo/odoo -C /odoo/odoo rev-parse --abbrev-ref HEAD 2>/dev/null)
+        if [ "$current_branch" = "$OE_BRANCH" ]; then
+            echo -e "${GREEN}✓${NC} Odoo $OE_BRANCH source already present in /odoo/odoo, reusing it"
+            log_message "INFO" "Reusing existing Odoo $OE_BRANCH checkout in /odoo/odoo"
+        else
+            log_message "ERROR" "/odoo/odoo already contains Odoo branch '$current_branch'. Remove it to install $OE_BRANCH."
+            return 1
+        fi
+    elif ! execute_simple "git clone --depth 1 --branch $OE_BRANCH https://www.github.com/odoo/odoo" "Cloning Odoo Community repository"; then
         log_message "ERROR" "Failed to clone Odoo Community repository"
         return 1
     fi
-    
-    if [ "$IS_ENTERPRISE" = "True" ]; then
+
+    if [ "$IS_ENTERPRISE" = "True" ] && [ -d /odoo/enterprise/.git ]; then
+        log_message "INFO" "Reusing existing Odoo Enterprise checkout in /odoo/enterprise"
+    elif [ "$IS_ENTERPRISE" = "True" ]; then
         echo -e "${CYAN}Cloning Odoo Enterprise repository...${NC}"
         local enterprise_url="https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/odoo/enterprise.git"
-        
-        if ! execute_simple "git clone --depth 1 --branch $OE_BRANCH $enterprise_url" "Cloning Odoo Enterprise repository"; then
+
+        # Not run through execute_simple: it would write the token to the log file
+        log_message "DEBUG" "Executing: git clone --depth 1 --branch $OE_BRANCH https://github.com/odoo/enterprise.git (credentials hidden)"
+        local clone_output clone_status
+        clone_output=$(git clone --depth 1 --branch "$OE_BRANCH" "$enterprise_url" /odoo/enterprise 2>&1)
+        clone_status=$?
+        echo "${clone_output//$GITHUB_TOKEN/***}" >> "$LOG_FILE"
+
+        if [ $clone_status -ne 0 ]; then
+            echo -e "${RED}✗${NC} Cloning Odoo Enterprise repository"
             log_message "ERROR" "Failed to clone Odoo Enterprise repository"
             echo -e "${RED}Enterprise repository clone failed. This could be due to:${NC}"
             echo -e "  ${GRAY}• Invalid GitHub credentials${NC}"
@@ -1150,6 +1195,9 @@ step_odoo_installation() {
             rm -rf /odoo/enterprise 2>/dev/null
             log_message "WARNING" "Falling back to Community edition due to Enterprise clone failure"
         else
+            # Drop the token from the stored remote URL (it would otherwise sit in .git/config)
+            git -C /odoo/enterprise remote set-url origin https://github.com/odoo/enterprise.git
+            echo -e "${GREEN}✓${NC} Cloning Odoo Enterprise repository"
             log_message "INFO" "Odoo Enterprise repository cloned successfully"
         fi
     fi
@@ -1249,10 +1297,20 @@ generate_odoo_config() {
     fi
     
     local proxy_mode="False"
+    local workers=0
     if [ "$INSTALL_NGINX" = "true" ]; then
         proxy_mode="True"
+        # Nginx sends /websocket to the gevent port (8072), which Odoo only opens in multi-worker mode.
+        # Use 2*CPU+1 workers, capped by RAM (~1GB kept for PostgreSQL/OS, ~300MB per worker), minimum 2.
+        local cpu_count=$(nproc)
+        local mem_mb=$(free -m | awk 'NR==2{print $2}')
+        local mem_workers=$(( (mem_mb - 1024) / 300 ))
+        workers=$((cpu_count * 2 + 1))
+        [ "$mem_workers" -lt "$workers" ] && workers=$mem_workers
+        [ "$workers" -lt 2 ] && workers=2
+        log_message "INFO" "Configuring $workers Odoo workers (CPUs: $cpu_count, RAM: ${mem_mb}MB)"
     fi
-    
+
     cat > /etc/odoo/odoo.conf << EOF
 [options]
 ; This is the password that allows database operations:
@@ -1265,18 +1323,21 @@ addons_path = $addons_path
 logfile = /var/log/odoo/odoo-server.log
 log_level = info
 proxy_mode = $proxy_mode
+workers = $workers
 EOF
-    
+
     execute_simple "chown $OE_USER:$OE_USER /etc/odoo/odoo.conf" "Setting ownership for configuration file"
     execute_simple "chmod 640 /etc/odoo/odoo.conf" "Setting permissions for configuration file"
-    
+
     echo -e "${CYAN}Generating full configuration using Odoo...${NC}"
-    
-    if execute_simple "su - $OE_USER -s /bin/bash -c 'cd /odoo/odoo && $PYTHON_VENV_PATH/bin/python ./odoo-bin -s -c /etc/odoo/odoo.conf --stop-after-init'" "Generating Odoo configuration"; then
+
+    # Long form --save: Odoo 20.0 removed the -s short flag
+    if execute_simple "su - $OE_USER -s /bin/bash -c 'cd /odoo/odoo && $PYTHON_VENV_PATH/bin/python ./odoo-bin --save -c /etc/odoo/odoo.conf --stop-after-init'" "Generating Odoo configuration"; then
         log_message "INFO" "Odoo configuration generated successfully"
-        # Re-apply our custom settings since odoo-bin -s overwrites the config
+        # Re-apply our custom settings since odoo-bin --save overwrites the config
         execute_simple "sed -i 's|^addons_path.*|addons_path = $addons_path|' /etc/odoo/odoo.conf" "Re-applying addons path"
         execute_simple "sed -i 's|^proxy_mode.*|proxy_mode = $proxy_mode|' /etc/odoo/odoo.conf" "Re-applying proxy mode"
+        execute_simple "sed -i 's|^workers.*|workers = $workers|' /etc/odoo/odoo.conf" "Re-applying workers"
         log_message "INFO" "Odoo configuration completed"
     else
         log_message "ERROR" "Failed to generate Odoo configuration"
@@ -1839,7 +1900,11 @@ main_installation() {
     step_python_environment_setup
     step_dependencies_installation
     step_wkhtmltopdf_installation
-    step_odoo_installation
+    # Without the Odoo source there is nothing to configure, so stop instead of continuing
+    if ! step_odoo_installation; then
+        log_message "ERROR" "Odoo installation step failed, aborting"
+        exit 1
+    fi
     step_service_configuration
     step_webmin_installation
     
@@ -1865,7 +1930,8 @@ main_installation() {
 # SCRIPT EXECUTION
 #==============================================================================
 
-# Initialize logging
+# Initialize logging (root-only: the log records commands, URLs and system details)
+( umask 077; : > "$LOG_FILE" )
 log_message "INFO" "Starting $SCRIPT_NAME v$SCRIPT_VERSION"
 log_message "INFO" "System: $(lsb_release -d | cut -f2)"
 log_message "INFO" "User: $(whoami)"
