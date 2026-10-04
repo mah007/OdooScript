@@ -1,24 +1,47 @@
 # Enhanced Odoo Installer
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Ubuntu](https://img.shields.io/badge/Ubuntu-22.04%20LTS-orange.svg)](https://ubuntu.com/)
-[![Odoo](https://img.shields.io/badge/Odoo-14.0%20to%2018.0-purple.svg)](https://www.odoo.com/)
+[![Ubuntu](https://img.shields.io/badge/Ubuntu-22.04%20%7C%2024.04%20LTS-orange.svg)](https://ubuntu.com/)
+[![Odoo](https://img.shields.io/badge/Odoo-14.0%20to%2020.0-purple.svg)](https://www.odoo.com/)
 [![Nginx](https://img.shields.io/badge/Nginx-Latest-green.svg)](https://nginx.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue.svg)](https://www.postgresql.org/)
 
-> **Professional Odoo installation script with domain configuration, official Nginx, SSL certificates, and dynamic configuration generation for Ubuntu 22.04**
+> **Professional Odoo installation scripts with domain configuration, official Nginx, SSL certificates, and dynamic configuration generation for Ubuntu 22.04 and 24.04**
 
 ## 🚀 Quick Start
 
+### Ubuntu 24.04 (recommended, Odoo 15.0 to 20.0)
+
 ```bash
 # Download the installer
-wget https://raw.githubusercontent.com/mah007/OdooScript/refs/heads/16.0/odoo_installer.sh
+wget https://raw.githubusercontent.com/mah007/OdooScript/refs/heads/main/odoo_installer_24.sh
 # Make it executable
-chmod +x odoo_installer.sh
+chmod +x odoo_installer_24.sh
 
 # Run the installer
+sudo ./odoo_installer_24.sh
+```
+
+### Ubuntu 22.04 (Odoo 14.0 to 18.0)
+
+```bash
+wget https://raw.githubusercontent.com/mah007/OdooScript/refs/heads/main/odoo_installer.sh
+chmod +x odoo_installer.sh
 sudo ./odoo_installer.sh
 ```
+
+### Which script should I use?
+
+| | `odoo_installer_24.sh` | `odoo_installer.sh` |
+|---|---|---|
+| Ubuntu | 24.04 LTS (Noble) | 22.04 LTS (Jammy) |
+| Odoo versions | 15.0 – 20.0 (14.0 offered with a warning) | 14.0 – 18.0 |
+| Editions | Community and Enterprise | Community |
+| Python | Virtual environment at `/odoo/python` (Python 3.12) | System Python with `pip --user` |
+| Webmin | Optional | – |
+| Steps | 9 | 8 |
+
+> Run the installers on a fresh server only. They upgrade system packages, replace any existing Nginx, and create an `odoo` system user.
 
 ## 📋 Table of Contents
 
@@ -54,10 +77,24 @@ sudo ./odoo_installer.sh
 - Modern TLS 1.2/1.3 configuration
 
 ### ⚙️ **Dynamic Configuration**
-- Native Odoo configuration generation using `odoo-bin`
+- Native Odoo configuration generation using `odoo-bin --save`
 - Clean configuration without forced master passwords
 - Automatic proxy mode detection for Nginx setups
+- Automatic worker count behind Nginx (2 × CPUs + 1, capped by RAM) so live chat and notifications work over the websocket (24.04)
 - Secure file permissions and ownership
+
+### 🏢 **Odoo Editions** (24.04)
+- **Community**: cloned from `github.com/odoo/odoo`
+- **Enterprise**: cloned from `github.com/odoo/enterprise` with your GitHub username and Personal Access Token (the account needs access to the Odoo Enterprise repository)
+- Credentials are verified before installation starts, are not written to the install log, and are removed from the cloned repository's Git config
+- Falls back to Community if the Enterprise clone fails
+
+### 🐧 **Ubuntu 24.04 Support** (`odoo_installer_24.sh`)
+- Isolated Python virtual environment at `/odoo/python` (Ubuntu 24.04 blocks system-wide `pip` installs)
+- Optional **Webmin** web administration on port 10000, using the Let's Encrypt certificate when available
+- `rtlcss` installed for right-to-left languages (Arabic, Hebrew) in both editions
+- wkhtmltopdf for amd64 and arm64 servers
+- Safe to re-run after a failure: an existing Odoo checkout of the same version is reused
 
 ### 🛡️ **Enterprise-Grade Security**
 - Comprehensive error handling with graceful degradation
@@ -74,7 +111,8 @@ sudo ./odoo_installer.sh
 ## 🖥️ System Requirements
 
 ### **Operating System**
-- Ubuntu 22.04 LTS (Jammy Jellyfish)
+- Ubuntu 24.04 LTS (Noble Numbat) with `odoo_installer_24.sh`
+- Ubuntu 22.04 LTS (Jammy Jellyfish) with `odoo_installer.sh`
 - Root or sudo privileges required
 
 ### **Hardware Requirements**
@@ -87,11 +125,11 @@ sudo ./odoo_installer.sh
 ### **Network Requirements**
 - Internet connection for package downloads
 - Domain name (optional, IP fallback available)
-- Open ports: 80 (HTTP), 443 (HTTPS), 8069 (Odoo direct)
+- Open ports: 80 (HTTP), 443 (HTTPS), 8069 (Odoo direct), 10000 (Webmin, optional)
 
 ## 🔄 Installation Process
 
-The installer follows an 8-step automated process:
+The 22.04 installer follows the 8-step automated process below. The 24.04 installer runs 9 steps: it adds **Python Environment Setup** after the database step (creates the virtual environment at `/odoo/python`) and **Webmin Installation** as the last step.
 
 ### **Step 1: Pre-flight Checks**
 - System requirements validation
@@ -112,9 +150,9 @@ The installer follows an 8-step automated process:
 - Connection testing
 
 ### **Step 4: Dependencies Installation**
-- Python 3.11 packages and libraries
-- System development tools
-- Node.js and npm packages
+- System libraries and build tools needed by Odoo's Python packages
+- Fonts used by Odoo reports and the web client
+- Node.js 20 and `rtlcss` (right-to-left languages)
 - Odoo-specific dependencies
 
 ### **Step 5: Wkhtmltopdf Installation**
@@ -124,8 +162,8 @@ The installer follows an 8-step automated process:
 - Integration testing
 
 ### **Step 6: Odoo Installation**
-- Source code download from official repository
-- Python requirements installation
+- Source code download from official repository (Community, plus Enterprise when selected on 24.04)
+- Python requirements installation (into the virtual environment on 24.04)
 - Directory structure creation
 - Permission configuration
 
@@ -199,11 +237,16 @@ odoo_installer.sh
 ## ⚙️ Configuration Options
 
 ### **Odoo Versions Supported**
-- Odoo 14.0 (LTS)
-- Odoo 15.0
-- Odoo 16.0
-- Odoo 17.0
-- Odoo 18.0 (Latest)
+
+| Odoo | Ubuntu 24.04 | Ubuntu 22.04 | Notes |
+|---|---|---|---|
+| 14.0 | ⚠️ | ✅ | Its pinned Python packages do not build on Python 3.12; use 22.04 |
+| 15.0 | ✅ | ✅ | |
+| 16.0 | ✅ | ✅ | |
+| 17.0 | ✅ | ✅ | |
+| 18.0 | ✅ | ✅ | |
+| 19.0 | ✅ | – | |
+| 20.0 | ✅ | – | Requires Python 3.12+ and PostgreSQL 16+ (both installed by the 24.04 script) |
 
 ### **Installation Modes**
 
@@ -226,18 +269,23 @@ Access: https://[server-ip]
 ### **Generated Configuration Files**
 
 #### **Odoo Configuration (`/etc/odoo/odoo.conf`)**
+
+The installer writes these settings, then runs `odoo-bin --save` so Odoo adds the full list of options with their defaults:
+
 ```ini
 [options]
-; Basic Odoo configuration
-db_host = localhost
-db_port = 5432
+db_host = False
+db_port = False
 db_user = odoo
 db_password = False
-addons_path = /odoo/odoo/addons
+; /odoo/enterprise is added for Enterprise installs
+addons_path = /odoo/odoo/addons,/odoo/enterprise
 logfile = /var/log/odoo/odoo-server.log
 log_level = info
-; Proxy mode configuration (when Nginx is installed)
+; True when Nginx is installed
 proxy_mode = True
+; 24.04 with Nginx: 2 x CPUs + 1, capped by RAM (minimum 2). 0 without Nginx
+workers = 5
 ```
 
 #### **Systemd Service (`/etc/systemd/system/odoo.service`)**
@@ -259,6 +307,12 @@ StandardOutput=journal+console
 
 [Install]
 WantedBy=multi-user.target
+```
+
+On Ubuntu 24.04 the service runs Odoo with the virtual environment's Python:
+
+```ini
+ExecStart=/odoo/python/bin/python /odoo/odoo/odoo-bin -c /etc/odoo/odoo.conf
 ```
 
 ## 🔒 SSL Certificate Management
@@ -375,6 +429,16 @@ curl -s ifconfig.me
 nslookup your-domain.com
 ```
 
+#### **Live Chat / Notifications Disconnect (websocket 502)**
+Nginx sends `/websocket` to port 8072, which Odoo only opens when `workers` is greater than 0:
+```bash
+grep -E '^workers' /etc/odoo/odoo.conf   # must be > 0 behind Nginx
+ss -ltnp | grep 8072                     # Odoo should be listening here
+```
+
+#### **Odoo 14.0 on Ubuntu 24.04**
+Odoo 14.0 pins `gevent`, `greenlet` and `Pillow` versions that do not build on Python 3.12, so its requirements fail to install. Use Ubuntu 22.04 with `odoo_installer.sh` for Odoo 14.0.
+
 #### **Service Status Checks**
 ```bash
 # Check Odoo service
@@ -416,12 +480,15 @@ journalctl -u nginx
 | Nginx | 80 | HTTP | HTTP redirect |
 | Nginx | 443 | HTTPS | Secure web access |
 | PostgreSQL | 5432 | TCP | Database |
+| Webmin | 10000 | HTTPS | Server administration (24.04, optional) |
 
 ### **File Permissions**
 
 ```bash
 # Odoo directories
 /odoo/odoo/          - odoo:odoo (755)
+/odoo/enterprise/    - odoo:odoo (755, Enterprise only)
+/odoo/python/        - odoo:odoo (755, Python virtual environment, 24.04 only)
 /etc/odoo/           - odoo:odoo (755)
 /var/log/odoo/       - odoo:odoo (755)
 
@@ -513,11 +580,16 @@ tar -czf ssl_backup.tar.gz /etc/ssl/nginx /etc/letsencrypt
 
 ### **Update Procedures**
 ```bash
-# Update Odoo to newer version
+# Pull the latest fixes for the installed Odoo version
 cd /odoo/odoo
-git fetch origin
-git checkout 17.0  # or desired version
+sudo -u odoo git pull
+# Ubuntu 24.04: refresh Python requirements in the virtual environment
+sudo -u odoo /odoo/python/bin/pip install -r /odoo/odoo/requirements.txt
 sudo systemctl restart odoo
+
+# Moving to a new major version (e.g. 19.0 -> 20.0) needs a database migration
+# through Odoo's upgrade service (https://upgrade.odoo.com); checking out a new
+# branch on an existing database is not enough
 
 # Update system packages
 sudo apt update && sudo apt upgrade
@@ -539,8 +611,9 @@ cd OdooScript
 # Create a feature branch
 git checkout -b feature/your-feature-name
 
-# Make your changes and test
-./odoo_installer.sh
+# Make your changes, check the syntax, then test on a fresh VM (never on your workstation)
+bash -n odoo_installer_24.sh
+shellcheck odoo_installer_24.sh
 
 # Commit and push
 git commit -m "Add your feature description"
@@ -548,10 +621,11 @@ git push origin feature/your-feature-name
 ```
 
 ### **Testing Guidelines**
-- Test on clean Ubuntu 22.04 installations
+- Test on clean Ubuntu 24.04 and 22.04 installations
 - Verify both domain and IP-based installations
 - Test SSL certificate generation (both Let's Encrypt and self-signed)
-- Validate all Odoo versions (14.0-18.0)
+- Validate the supported Odoo versions (15.0-20.0 on 24.04, 14.0-18.0 on 22.04)
+- Test both Community and Enterprise editions on 24.04
 - Check error handling and recovery scenarios
 
 ### **Code Style**
